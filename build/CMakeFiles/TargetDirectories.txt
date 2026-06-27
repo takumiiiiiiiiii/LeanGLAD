@@ -1,3 +1,0 @@
-/Users/x23029xx/Documents/GitHub/LeanGLAD/build/CMakeFiles/OpenGLTest.dir
-/Users/x23029xx/Documents/GitHub/LeanGLAD/build/CMakeFiles/edit_cache.dir
-/Users/x23029xx/Documents/GitHub/LeanGLAD/build/CMakeFiles/rebuild_cache.dir
