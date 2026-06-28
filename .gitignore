@@ -1,1 +1,8 @@
+# Build
 build/
+
+# User-specific CMake settings
+CMakeUserPresets.json
+
+# Generated files
+compile_commands.json
