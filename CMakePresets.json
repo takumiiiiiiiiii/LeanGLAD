@@ -4,13 +4,44 @@
         {
             "name": "default",
             "displayName": "Default",
-            "binaryDir": "${sourceDir}/build"
+            "hidden": true,
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "YES"
+            }
+        },
+        {
+            "name": "windows",
+            "displayName": "Windows (Ninja + GCC)",
+            "inherits": "default",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "C:/msys64/ucrt64/bin/gcc.exe",
+                "CMAKE_CXX_COMPILER": "C:/msys64/ucrt64/bin/g++.exe",
+                "CMAKE_MAKE_PROGRAM": "C:/msys64/ucrt64/bin/ninja.exe"
+            }
+        },
+        {
+            "name": "macos",
+            "displayName": "macOS (Ninja + Clang)",
+            "inherits": "default",
+            "generator": "Ninja"
         }
     ],
     "buildPresets": [
         {
             "name": "default",
-            "configurePreset": "default"
+            "configurePreset": "default",
+            "hidden": true
+        },
+        {
+            "name": "windows",
+            "configurePreset": "windows"
+        },
+        {
+            "name": "macos",
+            "configurePreset": "macos"
         }
     ]
 }
