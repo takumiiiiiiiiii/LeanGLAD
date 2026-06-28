@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(OpenGLTest LANGUAGES C CXX)
+if(WIN32)
+    project(OpenGLTest LANGUAGES C CXX)
+elseif(APPLE)
+    project(OpenGLTest)
+endif()
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
