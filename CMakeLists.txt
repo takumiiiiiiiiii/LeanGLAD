@@ -1,27 +1,34 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(OpenGLTest)
+project(OpenGLTest LANGUAGES C CXX)
 
-# C++17を使用
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# GLFWを探す
-find_package(glfw3 REQUIRED)
+if(APPLE)
+    find_package(glfw3 REQUIRED)
+elseif(WIN32)
+    add_subdirectory(external/glfw/glfw-3.4)
+endif()
 
-# ヘッダファイル検索パス
-include_directories(
-    include
-)
-
-# 実行ファイル作成
 add_executable(OpenGLTest
     main.cpp
-    glad/glad.c
 )
 
-# macOSのOpenGL Framework
-target_link_libraries(OpenGLTest
-    glfw
-    "-framework OpenGL"
+target_include_directories(OpenGLTest PRIVATE
+    external/glfw/glfw-3.4/include
 )
+
+if(APPLE)
+    target_link_libraries(OpenGLTest PRIVATE
+        glfw
+        "-framework OpenGL"
+    )
+elseif(WIN32)
+    target_link_libraries(OpenGLTest PRIVATE
+        glfw
+        opengl32
+    )
+endif()
