@@ -24,9 +24,8 @@
         },
         {
             "name": "macos",
-            "displayName": "macOS (Ninja + Clang)",
-            "inherits": "default",
-            "generator": "Ninja"
+            "displayName": "macOS (Clang)",
+            "inherits": "default"
         }
     ],
     "buildPresets": [
