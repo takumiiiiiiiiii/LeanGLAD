@@ -13,16 +13,19 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(APPLE)
     find_package(glfw3 REQUIRED)
+    
 elseif(WIN32)
     add_subdirectory(external/glfw/glfw-3.4)
 endif()
 
 add_executable(OpenGLTest
     main.cpp
+    external/glad/src/glad.c
 )
 
 target_include_directories(OpenGLTest PRIVATE
     external/glfw/glfw-3.4/include
+    external/glad/include
 )
 
 if(APPLE)
