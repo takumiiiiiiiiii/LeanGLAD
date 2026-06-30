@@ -17,16 +17,19 @@ const unsigned int SCR_HEIGHT = 600;
 //シェーダーの作成
 const char *vertexShaderSource = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
+    "out vec4 vertexColor;\n"
     "void main()\n"
     "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+    "gl_Position = vec4(aPos,1.0);\n"
+    "vertexColor= vec4(0.5,0.0,0.0,1.0);\n"
     "}\0";
 
 const char *fragmentShaderSource = "#version 330 core\n"
     "out vec4 FragColor;\n"
+    "uniform vec4 ourColor;\n"
     "void main()\n"
     "{\n"
-    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+    "   FragColor = ourColor;\n"
     "}\n\0";
 
 const char *fragmentShaderSourceYellow = "#version 330 core\n"
@@ -225,18 +228,21 @@ int main()
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         // 設定した色でカラーバッファ（画面）を実際に塗りつぶしてクリア
         glClear(GL_COLOR_BUFFER_BIT);
-        //三角形を描画
+        //色を変更
+        float timeValue = glfwGetTime();
+        float greenValue = (sin(timeValue)/2.0f)+0.5f;
+        int vertexColorLocation = glGetUniformLocation(shaderProgram,"ourColor");
         glUseProgram(shaderProgram);
+        glUniform4f(vertexColorLocation,0.0f,greenValue,0.0f,1.0f);
+        //三角形を描画
+        //glUseProgram(shaderProgram);
         glBindVertexArray(VAO[0]);
         // glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
         // glBindVertexArray(0);
         glDrawArrays(GL_TRIANGLES, 0, 3);
-        glUseProgram(shaderProgram2);
-        glBindVertexArray(VAO[1]);
-        glDrawArrays(GL_TRIANGLES, 3, 3);
         // カラーバッファを入れ替えて、描画した内容を実際に画面に表示（ダブルバッファリング）
         glfwSwapBuffers(window);
-        
+
         // キーボードやマウスの操作などのイベントを検知・処理
         glfwPollEvents();
     }
