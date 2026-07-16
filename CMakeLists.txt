@@ -20,6 +20,7 @@ endif()
 
 add_executable(OpenGLTest
     main.cpp
+    Shader.cpp
     external/glad/src/glad.c
 )
 
