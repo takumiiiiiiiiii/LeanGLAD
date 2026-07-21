@@ -22,6 +22,7 @@ add_executable(OpenGLTest
     main.cpp
     Shader.cpp
     external/glad/src/glad.c
+    stb_image.h
 )
 
 target_include_directories(OpenGLTest PRIVATE

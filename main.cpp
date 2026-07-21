@@ -1,8 +1,11 @@
 #define GL_SILENCE_DEPRECATION
+#define STB_IMAGE_IMPLEMENTATION
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include "Shader.h"
+#include "stb_image.h"
+
 
 // ウィンドウサイズ変更時に呼ばれるコールバック関数（ウィンドウサイズが変わっても描画範囲を追従させる）
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -14,32 +17,8 @@ void processInput(GLFWwindow *window);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-//シェーダーの作成
-const char *vertexShaderSource = "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec3 aColor;\n"
-    "out vec3 ourColor;\n"
-    "void main()\n"
-    "{\n"
-    "gl_Position = vec4(aPos, 1.0);\n"
-    "ourColor = aColor;\n"
-    "}\n\0";
-
-const char *fragmentShaderSource = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "in vec3 ourColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(ourColor,1.0);\n"
-    "}\n\0";
-
-const char *fragmentShaderSourceYellow = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(1.0f, 1.0f, 0.2f, 1.0f);\n"
-    "}\n\0";
-
+//画像のミックス具合
+float mix;
 int main()
 {
     
@@ -91,93 +70,67 @@ int main()
     
     // ウィンドウサイズが変更されたときに呼び出す関数（コールバック）を登録
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    //シェーダーの作成
+    Shader shader("../Shaders/VertexShader.SHADER", "../Shaders/FragmentShader.SHADER");
+    //テクスチャの作成
+    unsigned int texture1,texture2;
 
-    // //頂点シェーダーの初期化
-    unsigned int vertexShader ;
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader,1,&vertexShaderSource,NULL);
-    glCompileShader(vertexShader);
-
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader,GL_COMPILE_STATUS,&success);
-    if(!success){
-        glGetShaderInfoLog(vertexShader,512,NULL,infoLog);
-        std::cout<<"ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+    //texture1
+    glGenTextures(1,&texture1);
+    glBindTexture(GL_TEXTURE_2D,texture1);
+    //テクスチャ初期設定
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);//STはxとy軸
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    //stbによるテクスチャ画像読み込み
+    int width,height,nrChannles;
+    unsigned char*data = stbi_load("../Textures/wall.jpg",&width,&height,&nrChannles,0);
+    if(data)
+    {
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,width,height,0,GL_RGB,GL_UNSIGNED_BYTE,data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }else{
+        std::cout<<"Failed to load texture"<< std::endl;
     }
-    //フラグメントシェーダーの初期化
-    unsigned int fragmentShader;
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    glGetShaderiv(vertexShader,GL_COMPILE_STATUS,&success);
-    if(!success){
-        glGetShaderInfoLog(fragmentShader,512,NULL,infoLog);
-        std::cout<<"ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-    //
-    unsigned int fragmentShaderYellow;
-    fragmentShaderYellow = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShaderYellow, 1, &fragmentShaderSourceYellow, NULL);
-    glCompileShader(fragmentShaderYellow);
-    glGetShaderiv(vertexShader,GL_COMPILE_STATUS,&success);
-    if(!success){
-        glGetShaderInfoLog(fragmentShaderYellow,512,NULL,infoLog);
-        std::cout<<"ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-    //シェーダープログラムの作成
-    unsigned int shaderProgram;
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram,vertexShader);
-    glAttachShader(shaderProgram,fragmentShader);
-    glLinkProgram(shaderProgram);
-     // check for linking errors
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-    
-
-    unsigned int shaderProgram2;
-    shaderProgram2 = glCreateProgram();
-    glAttachShader(shaderProgram2,vertexShader);
-    glAttachShader(shaderProgram2,fragmentShaderYellow);
-    glLinkProgram(shaderProgram2);
-     // check for linking errors
-    glGetProgramiv(shaderProgram2, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram2, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+    stbi_image_free(data);
+    //texture2
+    glGenTextures(1,&texture2);
+    glBindTexture(GL_TEXTURE_2D,texture2);
+    //テクスチャ初期設定
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);//STはxとy軸
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    //stbによるテクスチャ画像読み込み
+    stbi_set_flip_vertically_on_load(true);
+    data = stbi_load("../Textures/awesomeface.png",&width,&height,&nrChannles,0);
+    if(data)
+    {
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }else{
+        std::cout<<"Failed to load texture"<< std::endl;
     }
 
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-    // glDeleteShader(fragmentShaderYellow);
+    stbi_image_free(data);
 
-    //四角形定義
-    // float vertices[] = {
-    //     //first triangle
-    //     -0.5f, -0.5f, 0.0f,
-    //     0.5f, -0.5f, 0.0f,
-    //     0.0f,  0.5f, 0.0f,
-    //      // second triangle
-    //      0.0f, -0.5f, 0.0f,  // left
-    //      0.9f, -0.5f, 0.0f,  // right
-    //      0.45f, 0.5f, 0.0f   // top 
-    // };  
+    shader.use();
+    glUniform1i(glGetUniformLocation(shader.ID,"texture1"),0);
+    shader.setInt("texture2",1);
+
+    // // //頂点シェーダーの初期化
+    // unsigned int vertexShader ;
+    // vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    // glShaderSource(vertexShader,1,&vertexShaderSource,NULL);
+
     float vertices[] = {
-    // positions         // colors
-     0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // bottom right
-    -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // bottom left
-     0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // top 
-};   
-    // float vertices[] = {
-    //     0.5f,  0.5f, 0.0f,  // top right
-    //     0.5f, -0.5f, 0.0f,  // bottom right
-    //     -0.5f, -0.5f, 0.0f,  // bottom left
-    //     -0.5f,  0.5f, 0.0f   // top left 
-    // };
+        // positions          // colors           // texture coords
+        0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   2.0f, 2.0f,   // top right
+        0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   2.0f, 0.0f,   // bottom right
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 2.0f    // top left 
+    };
     unsigned int indices[] = {  // note that we start from 0!
     0, 1, 3,   // first triangle
     1, 2, 3    // second triangle
@@ -193,8 +146,9 @@ int main()
     glGenBuffers(1,&VBO[0]);
     glGenBuffers(1,&VBO[1]);
     glGenBuffers(1,&EBO);
+    //テクスチャをバインド
 
-    //VAOをバインド
+
     glBindVertexArray(VAO[0]);
     //VBOをバインド
     glBindBuffer(GL_ARRAY_BUFFER,VBO[0]);
@@ -203,16 +157,18 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     
-    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)0);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)(3* sizeof(float)));
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)(3* sizeof(float)));
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2,2,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)(6* sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     glBindBuffer(GL_ARRAY_BUFFER,0);
 
     glBindVertexArray(0);
 
-    //VAOをバインド
+      //VAOをバインド
     glBindVertexArray(VAO[1]);
     //VBOをバインド
     glBindBuffer(GL_ARRAY_BUFFER,VBO[1]);
@@ -239,13 +195,20 @@ int main()
         // 設定した色でカラーバッファ（画面）を実際に塗りつぶしてクリア
         glClear(GL_COLOR_BUFFER_BIT);
         //色を変更
-        glUseProgram(shaderProgram);
-        //三角形を描画
-        //glUseProgram(shaderProgram);
+        shader.use();
+        //テクスチャを使用
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D,texture1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D,texture2);
+        //テクスチャをミックスする度合いを変更
+        int mixTexture = glGetUniformLocation(shader.ID,"smileMix");
+        glUniform1f(mixTexture,mix);
+
         glBindVertexArray(VAO[0]);
-        // glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
-        // glBindVertexArray(0);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        //glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
         // カラーバッファを入れ替えて、描画した内容を実際に画面に表示（ダブルバッファリング）
         glfwSwapBuffers(window);
 
@@ -267,6 +230,11 @@ void processInput(GLFWwindow *window)
     // エスケープキー（ESCAPE）が押された場合、ウィンドウを閉じるフラグを立てる
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+    if (glfwGetKey(window,GLFW_KEY_K) == GLFW_PRESS)
+        mix +=0.1f;
+    if (glfwGetKey(window,GLFW_KEY_M) == GLFW_PRESS)
+        mix -=0.1f;
+        
 }
 
 // ウィンドウサイズ変更時に呼ばれる関数の本体
