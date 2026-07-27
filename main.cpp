@@ -2,6 +2,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <iostream>
 #include "Shader.h"
 #include "stb_image.h"
@@ -183,10 +187,20 @@ int main()
     glBindBuffer(GL_ARRAY_BUFFER,0);
 
     glBindVertexArray(0);
+
+    glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
+    glm::mat4 trans = glm::mat4(1.0f);
+
+    //trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     
+  
+    
+
+    shader.use();
     // ウィンドウが閉じられる指示が出るまで、メインループを繰り返す
     while (!glfwWindowShouldClose(window))
     {
+        // trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
         // エスケープキーなどの入力入力を監視・処理
         processInput(window);
 
@@ -195,7 +209,7 @@ int main()
         // 設定した色でカラーバッファ（画面）を実際に塗りつぶしてクリア
         glClear(GL_COLOR_BUFFER_BIT);
         //色を変更
-        shader.use();
+
         //テクスチャを使用
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D,texture1);
@@ -205,16 +219,41 @@ int main()
         int mixTexture = glGetUniformLocation(shader.ID,"smileMix");
         glUniform1f(mixTexture,mix);
 
-        glBindVertexArray(VAO[0]);
+        glm::mat4 trans = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
 
-        //glDrawArrays(GL_TRIANGLES, 0, 3);
+        unsigned int transformLoc = glGetUniformLocation(shader.ID,"transform");
+        glUniformMatrix4fv(transformLoc,1,GL_FALSE,glm::value_ptr(trans));
+
+        glBindVertexArray(VAO[0]);
         glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
+
+         // second transformation
+        // ---------------------
+        trans = glm::mat4(1.0f); // reset it to identity matrix
+        trans = glm::translate(trans, glm::vec3(-0.5f, 0.5f, 0.0f));
+        float scaleAmount = static_cast<float>(sin(glfwGetTime()));
+        trans= glm::scale(trans, glm::vec3(scaleAmount, scaleAmount, scaleAmount));
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, &trans[0][0]); // this time take the matrix value array's first element as its memory pointer value
+
+        // now with the uniform matrix being replaced with new transformations, draw it again.
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
         // カラーバッファを入れ替えて、描画した内容を実際に画面に表示（ダブルバッファリング）
         glfwSwapBuffers(window);
-
         // キーボードやマウスの操作などのイベントを検知・処理
         glfwPollEvents();
     }
+
+    // optional: de-allocate all resources once they've outlived their purpose:
+    // ------------------------------------------------------------------------
+    glDeleteVertexArrays(1, &VAO[0]);
+    glDeleteBuffers(1, &VBO[0]);
+    glDeleteBuffers(1, &EBO);
+    glDeleteVertexArrays(1, &VAO[1]);
+    glDeleteBuffers(1, &VBO[1]);
+
 
     // メインループ終了後、ウィンドウを破棄
     glfwDestroyWindow(window);
