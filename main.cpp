@@ -9,6 +9,7 @@
 #include <iostream>
 #include "Shader.h"
 #include "stb_image.h"
+#include "Camera.h"
 
 
 // ウィンドウサイズ変更時に呼ばれるコールバック関数（ウィンドウサイズが変わっても描画範囲を追従させる）
@@ -17,12 +18,35 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 // キーボード入力を処理する関数（特定のキーが押されたかチェックする）
 void processInput(GLFWwindow *window);
 
+void cursor_enter_callback(GLFWwindow* window, int entered);
+
+//マウスがどんな入力をされたか
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
+
 // 画面の初期サイズ（幅と高さ）
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
 //画像のミックス具合
 float mix;
+
+//カメラ場所
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+
+//カメラ移動
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+float lastX = SCR_WIDTH / 2.0f;
+float lastY = SCR_HEIGHT / 2.0f;
+bool firstMouse = true;
+
+//時間
+float deltaTime = 0.0f;	// Time between current frame and last frame
+float lastFrame = 0.0f; // Time of last frame
+
+
+
 int main()
 {
     
@@ -62,7 +86,10 @@ int main()
 
     // 作成したウィンドウを現在のOpenGL描画対象（コンテキスト）に設定
     glfwMakeContextCurrent(window);
-
+    //ウィンドウのカーソル入退室記録
+    glfwSetCursorEnterCallback(window, cursor_enter_callback);
+    //カーソル座標をコールバック
+    glfwSetCursorPosCallback(window, mouse_callback);
     // GLADの初期化。これを行わないと最初のOpenGL関数呼び出しでクラッシュする
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
@@ -74,6 +101,7 @@ int main()
     
     // ウィンドウサイズが変更されたときに呼び出す関数（コールバック）を登録
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glEnable(GL_DEPTH_TEST);
     //シェーダーの作成
     Shader shader("../Shaders/VertexShader.SHADER", "../Shaders/FragmentShader.SHADER");
     //テクスチャの作成
@@ -129,11 +157,59 @@ int main()
     // glShaderSource(vertexShader,1,&vertexShaderSource,NULL);
 
     float vertices[] = {
-        // positions          // colors           // texture coords
-        0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   2.0f, 2.0f,   // top right
-        0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   2.0f, 0.0f,   // bottom right
-        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 2.0f    // top left 
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+    };
+    glm::vec3 cubePositions[] = {
+        glm::vec3( 0.0f,  0.0f,  0.0f), 
+        glm::vec3( 2.0f,  5.0f, -15.0f), 
+        glm::vec3(-1.5f, -2.2f, -2.5f),  
+        glm::vec3(-3.8f, -2.0f, -12.3f),  
+        glm::vec3( 2.4f, -0.4f, -3.5f),  
+        glm::vec3(-1.7f,  3.0f, -7.5f),  
+        glm::vec3( 1.3f, -2.0f, -2.5f),  
+        glm::vec3( 1.5f,  2.0f, -2.5f), 
+        glm::vec3( 1.5f,  0.2f, -1.5f), 
+        glm::vec3(-1.3f,  1.0f, -1.5f)  
     };
     unsigned int indices[] = {  // note that we start from 0!
     0, 1, 3,   // first triangle
@@ -161,11 +237,11 @@ int main()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     
-    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)0);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,5*sizeof(float),(void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)(3* sizeof(float)));
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,5*sizeof(float),(void*)(3* sizeof(float)));
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2,2,GL_FLOAT,GL_FALSE,8*sizeof(float),(void*)(6* sizeof(float)));
+    glVertexAttribPointer(2,2,GL_FLOAT,GL_FALSE,5*sizeof(float),(void*)(6* sizeof(float)));
     glEnableVertexAttribArray(2);
 
     glBindBuffer(GL_ARRAY_BUFFER,0);
@@ -194,20 +270,29 @@ int main()
     //trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
     
   
-    
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::rotate(model,glm::radians(-55.0f),glm::vec3(1.0f,0.0f,0.0f));
+
+    glm::mat4 view = glm::mat4(1.0f);
+    // note that we're translating the scene in the reverse direction of where we want to move
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f)); 
+
 
     shader.use();
     // ウィンドウが閉じられる指示が出るまで、メインループを繰り返す
     while (!glfwWindowShouldClose(window))
     {
+        //時間の更新
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;  
         // trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
         // エスケープキーなどの入力入力を監視・処理
         processInput(window);
-
         // 画面をクリアするときの背景色を設定（暗い青緑色）
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         // 設定した色でカラーバッファ（画面）を実際に塗りつぶしてクリア
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         //色を変更
 
         //テクスチャを使用
@@ -215,30 +300,42 @@ int main()
         glBindTexture(GL_TEXTURE_2D,texture1);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D,texture2);
+        
+
+        
+        //カメラ関連
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 view = camera.GetViewMatrix();
+        //シェーダーに反映
+        shader.setMat4("projection", projection);
+        shader.setMat4("view",view);
+        //カメラの移動
+
         //テクスチャをミックスする度合いを変更
         int mixTexture = glGetUniformLocation(shader.ID,"smileMix");
         glUniform1f(mixTexture,mix);
+        int modelLoc = glGetUniformLocation(shader.ID, "model");
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+        
+        // glm::mat4 trans = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        // trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+        // trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
 
-        glm::mat4 trans = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-
-        unsigned int transformLoc = glGetUniformLocation(shader.ID,"transform");
-        glUniformMatrix4fv(transformLoc,1,GL_FALSE,glm::value_ptr(trans));
+        // unsigned int transformLoc = glGetUniformLocation(shader.ID,"transform");
+        // glUniformMatrix4fv(transformLoc,1,GL_FALSE,glm::value_ptr(trans));
 
         glBindVertexArray(VAO[0]);
-        glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
-
-         // second transformation
-        // ---------------------
-        trans = glm::mat4(1.0f); // reset it to identity matrix
-        trans = glm::translate(trans, glm::vec3(-0.5f, 0.5f, 0.0f));
-        float scaleAmount = static_cast<float>(sin(glfwGetTime()));
-        trans= glm::scale(trans, glm::vec3(scaleAmount, scaleAmount, scaleAmount));
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, &trans[0][0]); // this time take the matrix value array's first element as its memory pointer value
-
-        // now with the uniform matrix being replaced with new transformations, draw it again.
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        for(unsigned int i = 0; i < 10; i++)
+        {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+            float angle = 20.0f * i; 
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            shader.setMat4("model",model);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
+        glDrawArrays(GL_TRIANGLES,0,36);
+        glDrawElements(GL_TRIANGLES,36,GL_UNSIGNED_INT,0);
 
         // カラーバッファを入れ替えて、描画した内容を実際に画面に表示（ダブルバッファリング）
         glfwSwapBuffers(window);
@@ -266,6 +363,7 @@ int main()
 // キーボード入力を処理する関数の本体
 void processInput(GLFWwindow *window)
 {
+
     // エスケープキー（ESCAPE）が押された場合、ウィンドウを閉じるフラグを立てる
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
@@ -273,8 +371,56 @@ void processInput(GLFWwindow *window)
         mix +=0.1f;
     if (glfwGetKey(window,GLFW_KEY_M) == GLFW_PRESS)
         mix -=0.1f;
+    const float cameraSpeed = 2.5f * deltaTime; // adjust accordingly
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera.ProcessKeyboard(FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera.ProcessKeyboard(LEFT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera.ProcessKeyboard(RIGHT, deltaTime);
         
 }
+
+
+bool cursorInsideWindow = false;
+
+void cursor_enter_callback(GLFWwindow* window, int entered)
+{
+    cursorInsideWindow = entered == GLFW_TRUE;
+}
+
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+{
+    if (!cursorInsideWindow)
+        return;
+    std::cout << "Mouse" << std::endl;
+    float xpos = static_cast<float>(xposIn);
+    float ypos = static_cast<float>(yposIn);
+
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+
+    lastX = xpos;
+    lastY = ypos;
+
+    camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    camera.ProcessMouseScroll(static_cast<float>(yoffset));
+}
+
+
 
 // ウィンドウサイズ変更時に呼ばれる関数の本体
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)

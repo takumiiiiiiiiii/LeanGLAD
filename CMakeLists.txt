@@ -21,8 +21,10 @@ endif()
 add_executable(OpenGLTest
     main.cpp
     Shader.cpp
+    Camera.cpp
     external/glad/src/glad.c
     stb_image.h
+    Player.cpp
 )
 
 target_include_directories(OpenGLTest PRIVATE
