@@ -24,14 +24,16 @@ add_executable(OpenGLTest
     Camera.cpp
     external/glad/src/glad.c
     stb_image.h
-    Player.cpp
+    Objects.cpp
+    Shapes/Plane.cpp
+    Shapes/Cube.cpp
+    Entity/Transform.cpp
+    Entity/Player.cpp
 )
-
 target_include_directories(OpenGLTest PRIVATE
     external/glfw/glfw-3.4/include
     external/glad/include
 )
-
 if(APPLE)
     target_link_libraries(OpenGLTest PRIVATE
         glfw
