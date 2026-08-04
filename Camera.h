@@ -44,8 +44,7 @@ class Camera
         void ProcessKeyboard(Camera_Movement direction, float deltaTime);
         void ProcessMouseMovement(float xoffset,float yoffset);
         void ProcessMouseScroll(float yoffset);
-        void Follow(const glm::vec3& target);
+        void Follow(const glm::vec3& target, const glm::vec3& desiredOffset, float dt);
     private:
         void updateCameraVectors();
 };
-    

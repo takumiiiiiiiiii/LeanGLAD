@@ -14,6 +14,9 @@
 #include "Objects.h"
 #include "Shapes/Plane.h"
 #include "Shapes/Cube.h"
+#include "Core/Input.h"
+#include "Entity/Transform.h"
+#include "Entity/Player.h"
 
 // ウィンドウサイズ変更時に呼ばれるコールバック関数（ウィンドウサイズが変わっても描画範囲を追従させる）
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -93,6 +96,7 @@ int main()
     glfwSetCursorEnterCallback(window, cursor_enter_callback);
     //カーソル座標をコールバック
     glfwSetCursorPosCallback(window, mouse_callback);
+    Input::SetWindow(window);
     // GLADの初期化。これを行わないと最初のOpenGL関数呼び出しでクラッシュする
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
@@ -277,6 +281,7 @@ int main()
 
 
     shader.use();
+    Player player = Player(Transform(), 1.0f);
     // ウィンドウが閉じられる指示が出るまで、メインループを繰り返す
     while (!glfwWindowShouldClose(window))
     {
@@ -302,6 +307,7 @@ int main()
 
         
         //カメラ関連
+        camera.Follow(player.GetPosition(),glm::vec3(0.0f, 2.0f, 5.0f), deltaTime);
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
         //シェーダーに反映
@@ -312,14 +318,19 @@ int main()
         //テクスチャをミックスする度合いを変更
         int mixTexture = glGetUniformLocation(shader.ID,"smileMix");
         glUniform1f(mixTexture,mix);
-        // int modelLoc = glGetUniformLocation(shader.ID, "model");
-        // glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
+        //プレイヤーの更新
+        glm::mat4 Pmodel = glm::mat4(1.0f);
+        Pmodel = glm::translate(Pmodel,player.GetPosition());
+        shader.setMat4("model",Pmodel);
+        player.Update(deltaTime);
+        //床の更新
         Plane plane;
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, -1.0f, 0.0f));
         shader.setMat4("model",model);
         plane.Draw();
+
         // glm::mat4 trans = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         // trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
         // trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
@@ -331,13 +342,13 @@ int main()
         Cube cube;
         for(unsigned int i = 0; i < 10; i++)
         {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            float angle = 20.0f * i; 
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            shader.setMat4("model",model);
+            // glm::mat4 model = glm::mat4(1.0f);
+            // model = glm::translate(model, cubePositions[i]);
+            // float angle = 20.0f * i; 
+            // model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            // shader.setMat4("model",model);
 
-            cube.Draw();
+            // cube.Draw();
             // glDrawArrays(GL_TRIANGLES, 0, 36);
         }
         glDrawArrays(GL_TRIANGLES,0,36);
@@ -418,7 +429,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
     lastX = xpos;
     lastY = ypos;
 
-    camera.ProcessMouseMovement(xoffset, yoffset);
+    //camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)

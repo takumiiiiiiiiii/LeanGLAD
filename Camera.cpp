@@ -83,15 +83,24 @@ void Camera::updateCameraVectors()
     Up    = glm::normalize(glm::cross(Right, Front));
 }
 
-void Camera::Follow(const glm::vec3& target)
+void Camera::Follow(const glm::vec3& target, const glm::vec3& desiredOffset, float dt)
 {
-    // Calculate the desired position based on the target's position
-    glm::vec3 desiredPosition = target - Front * 10.0f; // Adjust the distance as needed
+    // // Calculate the desired position based on the target's position
+    // glm::vec3 desiredPosition = target - Front * 10.0f; // Adjust the distance as needed
 
-    // Smoothly interpolate to the desired position
-    Position = glm::mix(Position, desiredPosition, 0.1f); // Adjust the interpolation factor as needed
+    // // Smoothly interpolate to the desired position
+    // Position = glm::mix(Position, desiredPosition, 0.1f); // Adjust the interpolation factor as needed
 
-    // Update the camera vectors to look at the target
+    // // Update the camera vectors to look at the target
+    // Front = glm::normalize(target - Position);
+    // Right = glm::normalize(glm::cross(Front, WorldUp));
+    // Up = glm::normalize(glm::cross(Right, Front));
+   glm::vec3 desiredPosition = target + desiredOffset; // Frontを使わない
+
+    // フレームレート非依存の減衰補間にしておくとなお良い
+    float alpha = 1.0f - std::exp(-10 * dt);
+    Position = glm::mix(Position, desiredPosition, alpha);
+
     Front = glm::normalize(target - Position);
     Right = glm::normalize(glm::cross(Front, WorldUp));
     Up = glm::normalize(glm::cross(Right, Front));
