@@ -82,3 +82,17 @@ void Camera::updateCameraVectors()
     Right = glm::normalize(glm::cross(Front, WorldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
     Up    = glm::normalize(glm::cross(Right, Front));
 }
+
+void Camera::Follow(const glm::vec3& target)
+{
+    // Calculate the desired position based on the target's position
+    glm::vec3 desiredPosition = target - Front * 10.0f; // Adjust the distance as needed
+
+    // Smoothly interpolate to the desired position
+    Position = glm::mix(Position, desiredPosition, 0.1f); // Adjust the interpolation factor as needed
+
+    // Update the camera vectors to look at the target
+    Front = glm::normalize(target - Position);
+    Right = glm::normalize(glm::cross(Front, WorldUp));
+    Up = glm::normalize(glm::cross(Right, Front));
+}
