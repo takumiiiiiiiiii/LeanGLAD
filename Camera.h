@@ -1,4 +1,4 @@
-
+#pragma once
 #include <glad/glad.h> // include glad to get all the required OpenGL headers
 #include <string>
 #include <fstream>
@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "Core/Input.h"
 
 // デフォルトのカメラ移動
 enum Camera_Movement {
@@ -38,13 +39,19 @@ class Camera
         float MovementSpeed;
         float MouseSensitivity;
         float Zoom;
+        //フォロー用の距離と高さの設定
+        float FollowDistance = 10.0f;
+        float FollowHeight = 3.0f;
         Camera(glm::vec3 position = glm::vec3(0.0f),glm::vec3 up = glm::vec3(0.0f,1.0f,0.0f),float yaw = YAW,float pitch = PITCH);
         Camera(float posX, float posY, float posZ,float upX, float upY, float upZ,float yaw, float pitch);
         glm::mat4 GetViewMatrix();
+        glm::mat3 GetNormalMatrix();
+        glm::vec3 GetFrontVector();
         void ProcessKeyboard(Camera_Movement direction, float deltaTime);
         void ProcessMouseMovement(float xoffset,float yoffset);
         void ProcessMouseScroll(float yoffset);
-        void Follow(const glm::vec3& target, const glm::vec3& desiredOffset, float dt);
+        void Follow(const glm::vec3& target, float dt);
+        void FollowRotate(const glm::vec3& target,float Rotate_speed,float dt);
     private:
         void updateCameraVectors();
 };

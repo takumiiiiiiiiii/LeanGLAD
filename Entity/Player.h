@@ -5,6 +5,7 @@
 #include "Transform.h"
 #include "../Shapes/Cube.h"
 #include "../Core/Input.h"
+#include "../Camera.h"
 class Player
 {
 public:
@@ -13,9 +14,12 @@ public:
 
     void Draw();
     void Move(float deltaTime);
+    void MoveWithCameraOrientation(Camera& camera, float deltaTime);
+    void MoveWithVector(const glm::vec3& direction, float deltaTime);
 
     glm::vec3 GetPosition() const;
     void SetPosition(const glm::vec3& pos);
+    void SetMoveSpeed(float speed);
 private:
     Cube cube;
     Transform transform;

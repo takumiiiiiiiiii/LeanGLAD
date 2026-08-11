@@ -307,7 +307,8 @@ int main()
 
         
         //カメラ関連
-        camera.Follow(player.GetPosition(),glm::vec3(0.0f, 2.0f, 5.0f), deltaTime);
+        camera.Follow(player.GetPosition(), deltaTime);
+        camera.FollowRotate(player.GetPosition(), 20.0, deltaTime);
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
         //シェーダーに反映
@@ -323,7 +324,8 @@ int main()
         glm::mat4 Pmodel = glm::mat4(1.0f);
         Pmodel = glm::translate(Pmodel,player.GetPosition());
         shader.setMat4("model",Pmodel);
-        player.Update(deltaTime);
+        player.MoveWithCameraOrientation(camera, deltaTime);
+        player.Draw();
         //床の更新
         Plane plane;
         glm::mat4 model = glm::mat4(1.0f);
@@ -389,14 +391,6 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window,GLFW_KEY_M) == GLFW_PRESS)
         mix -=0.1f;
     const float cameraSpeed = 2.5f * deltaTime; // adjust accordingly
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
         
 }
 

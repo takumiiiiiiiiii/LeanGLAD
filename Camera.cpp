@@ -32,6 +32,17 @@ glm::mat4 Camera::GetViewMatrix(){
     glm::mat4 view = glm::lookAt(Position, Position + Front, Up);
     return view;
 }
+glm::mat3 Camera::GetNormalMatrix()
+{
+    glm::mat4 view = GetViewMatrix();
+    glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(view)));
+    return normalMatrix;
+}
+
+glm::vec3 Camera::GetFrontVector()
+{
+    return Front;
+}
 
 void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
 {
@@ -83,25 +94,70 @@ void Camera::updateCameraVectors()
     Up    = glm::normalize(glm::cross(Right, Front));
 }
 
-void Camera::Follow(const glm::vec3& target, const glm::vec3& desiredOffset, float dt)
+void Camera::Follow(const glm::vec3& target, float dt)
 {
-    // // Calculate the desired position based on the target's position
-    // glm::vec3 desiredPosition = target - Front * 10.0f; // Adjust the distance as needed
 
-    // // Smoothly interpolate to the desired position
-    // Position = glm::mix(Position, desiredPosition, 0.1f); // Adjust the interpolation factor as needed
+    glm::vec3 desiredOffset =
+        glm::vec3(
+            cos(glm::radians(Yaw)) * FollowDistance,
+            FollowHeight,
+            sin(glm::radians(Yaw)) * FollowDistance
+        );
 
-    // // Update the camera vectors to look at the target
-    // Front = glm::normalize(target - Position);
-    // Right = glm::normalize(glm::cross(Front, WorldUp));
-    // Up = glm::normalize(glm::cross(Right, Front));
-   glm::vec3 desiredPosition = target + desiredOffset; // Frontを使わない
+    glm::vec3 desiredPosition =
+        target + desiredOffset;
 
-    // フレームレート非依存の減衰補間にしておくとなお良い
-    float alpha = 1.0f - std::exp(-10 * dt);
-    Position = glm::mix(Position, desiredPosition, alpha);
+    float alpha =
+        1.0f - std::exp(-10.0f * dt);
 
-    Front = glm::normalize(target - Position);
-    Right = glm::normalize(glm::cross(Front, WorldUp));
-    Up = glm::normalize(glm::cross(Right, Front));
+    Position =
+        glm::mix(Position, desiredPosition, alpha);
+
+    Front =
+        glm::normalize(-desiredOffset);
+
+    Right =
+        glm::normalize(glm::cross(Front, WorldUp));
+
+    Up =
+        glm::normalize(glm::cross(Right, Front));
+}
+
+void Camera::FollowRotate(const glm::vec3& target,float Rotate_speed,float dt)
+{
+    bool rotated = false;
+
+    if (Input::IsKeyPressed(GLFW_KEY_LEFT))
+    {
+        Yaw -= Rotate_speed * dt;
+        rotated = true;
+    }
+
+    if (Input::IsKeyPressed(GLFW_KEY_RIGHT))
+    {
+        Yaw += Rotate_speed * dt;
+        rotated = true;
+    }
+
+    if (rotated)
+    {
+        glm::vec3 desiredOffset =
+            glm::vec3(
+                cos(glm::radians(Yaw)) * FollowDistance,
+                FollowHeight,
+                sin(glm::radians(Yaw)) * FollowDistance
+            );
+
+        Position =
+            target + desiredOffset;
+
+        Front =
+            glm::normalize(target - Position);
+
+        Right =
+            glm::normalize(glm::cross(Front, WorldUp));
+
+        Up =
+            glm::normalize(glm::cross(Right, Front));
+    }
 }
