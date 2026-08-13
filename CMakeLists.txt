@@ -30,6 +30,8 @@ add_executable(OpenGLTest
     Entity/Transform.cpp
     Entity/Player.cpp
     Core/Input.cpp
+    global.cpp
+    Game.cpp
 )
 target_include_directories(OpenGLTest PRIVATE
     external/glfw/glfw-3.4/include
