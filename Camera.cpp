@@ -97,10 +97,13 @@ void Camera::updateCameraVectors()
 glm::vec3 Camera::CalculateOffset() const
 {
     float yawRad = glm::radians(Yaw);
+    float pitchRad = glm::radians(Pitch);
+    float horizontalDistance = FollowDistance * std::cos(pitchRad);
+    float verticalDistance   = FollowDistance * std::sin(pitchRad);
     return glm::vec3(
-        std::cos(yawRad) * FollowDistance,
-        FollowHeight,
-        std::sin(yawRad) * FollowDistance
+        horizontalDistance * std::cos(yawRad),
+        verticalDistance + FollowHeight, // オフセット基準高さ
+        horizontalDistance * std::sin(yawRad)
     );
 }
 
@@ -137,13 +140,19 @@ void Camera::FollowRotate(const glm::vec3& target, float rotateSpeed, float dt)
     // 1. 回転入力の処理
     if (Input::IsKeyPressed(GLFW_KEY_LEFT))
     {
-        Yaw -= rotateSpeed * dt;
+        Yaw += rotateSpeed * dt;
     }
     if (Input::IsKeyPressed(GLFW_KEY_RIGHT))
     {
-        Yaw += rotateSpeed * dt;
+        Yaw -= rotateSpeed * dt;
     }
-
+    if(Input::IsKeyPressed(GLFW_KEY_UP)){
+        Pitch -= rotateSpeed * dt;
+    }
+    if(Input::IsKeyPressed(GLFW_KEY_DOWN)){
+        Pitch += rotateSpeed * dt;
+    }
+    Pitch = glm::clamp(Pitch, -80.0f, 80.0f);
     // 2. 初回フレームのみ、smoothedTarget を実際のターゲット位置で初期化
     if (!isInitialized)
     {
