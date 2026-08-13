@@ -96,14 +96,14 @@ void Camera::updateCameraVectors()
 
 void Camera::Follow(const glm::vec3& target, float dt)
 {
-
+    //ターゲットとの距離
     glm::vec3 desiredOffset =
         glm::vec3(
             cos(glm::radians(Yaw)) * FollowDistance,
             FollowHeight,
             sin(glm::radians(Yaw)) * FollowDistance
         );
-
+    //ターゲットにピッタリくっついた時の距離
     glm::vec3 desiredPosition =
         target + desiredOffset;
 
@@ -146,12 +146,21 @@ void Camera::FollowRotate(const glm::vec3& target,float Rotate_speed,float dt)
                 FollowHeight,
                 sin(glm::radians(Yaw)) * FollowDistance
             );
+        //ターゲットにピッタリついて行ってる時のカメラ座標
+        glm::vec3 desiredPosition =
+        target + desiredOffset;
+        float alpha =
+        1.0f - std::exp(-10.0f * dt);
+        //少しターゲットから遅れているカメラ座標
+        glm::vec3 mixdesiredPosition = glm::mix(Position, desiredPosition, alpha);
+        //ターゲットから少し遅れた地点
+        glm::vec3 desiredTarget = mixdesiredPosition-desiredOffset;
 
-        Position =
-            target + desiredOffset;
+        Position = 
+            desiredTarget + desiredOffset;
 
         Front =
-            glm::normalize(target - Position);
+            glm::normalize(desiredTarget - Position);
 
         Right =
             glm::normalize(glm::cross(Front, WorldUp));

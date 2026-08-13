@@ -116,7 +116,7 @@ void Game::UpdatePlaying(float dt){
         
         //カメラ関連
         camera.Follow(player.GetPosition(),dt);
-        camera.FollowRotate(player.GetPosition(), 20.0,dt);
+        camera.FollowRotate(player.GetPosition(), 100.0,dt);
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
         shader.setMat4("projection", projection);

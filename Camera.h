@@ -52,6 +52,7 @@ class Camera
         void ProcessMouseScroll(float yoffset);
         void Follow(const glm::vec3& target, float dt);
         void FollowRotate(const glm::vec3& target,float Rotate_speed,float dt);
+        
     private:
         void updateCameraVectors();
 };
