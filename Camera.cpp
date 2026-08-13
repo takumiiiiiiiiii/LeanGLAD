@@ -126,7 +126,6 @@ void Camera::Follow(const glm::vec3& target, float dt)
 void Camera::FollowRotate(const glm::vec3& target,float Rotate_speed,float dt)
 {
     bool rotated = false;
-
     if (Input::IsKeyPressed(GLFW_KEY_LEFT))
     {
         Yaw -= Rotate_speed * dt;
