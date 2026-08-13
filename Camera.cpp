@@ -93,79 +93,88 @@ void Camera::updateCameraVectors()
     Right = glm::normalize(glm::cross(Front, WorldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
     Up    = glm::normalize(glm::cross(Right, Front));
 }
-
-void Camera::Follow(const glm::vec3& target, float dt)
+// --- ヘルパー関数: オフセット位置の計算 ---
+glm::vec3 Camera::CalculateOffset() const
 {
-    //ターゲットとの距離
-    glm::vec3 desiredOffset =
-        glm::vec3(
-            cos(glm::radians(Yaw)) * FollowDistance,
-            FollowHeight,
-            sin(glm::radians(Yaw)) * FollowDistance
-        );
-    //ターゲットにピッタリくっついた時の距離
-    glm::vec3 desiredPosition =
-        target + desiredOffset;
-
-    float alpha =
-        1.0f - std::exp(-10.0f * dt);
-
-    Position =
-        glm::mix(Position, desiredPosition, alpha);
-
-    Front =
-        glm::normalize(-desiredOffset);
-
-    Right =
-        glm::normalize(glm::cross(Front, WorldUp));
-
-    Up =
-        glm::normalize(glm::cross(Right, Front));
+    float yawRad = glm::radians(Yaw);
+    return glm::vec3(
+        std::cos(yawRad) * FollowDistance,
+        FollowHeight,
+        std::sin(yawRad) * FollowDistance
+    );
 }
 
-void Camera::FollowRotate(const glm::vec3& target,float Rotate_speed,float dt)
+// --- ヘルパー関数: カメラの方向ベクトル(Front, Right, Up)の更新 ---
+void Camera::UpdateCameraVectors(const glm::vec3& offset)
 {
-    bool rotated = false;
+    // ターゲットを視点中心にするため、オフセットの逆方向を正面とする
+    Front = glm::normalize(-offset);
+    Right = glm::normalize(glm::cross(Front, WorldUp));
+    Up    = glm::normalize(glm::cross(Right, Front));
+}
+
+// --- メイン処理: ターゲット追従 ---
+void Camera::Follow(const glm::vec3& target, float dt)
+{
+    //ターゲットとのオフセットを考慮し、カメラの位置を決定
+    glm::vec3 desiredOffset   = CalculateOffset();
+    glm::vec3 desiredPosition = target + desiredOffset;
+
+    // フレームレート依存のない滑らかな移動 (10.0f は追従速度の係数)
+    constexpr float Smoothness = 10.0f;
+    float alpha = 1.0f - std::exp(-Smoothness * dt);
+
+    // カメラ位置を補間
+    Position = glm::mix(Position, desiredPosition, alpha);
+
+    // カメラの向きを更新
+    UpdateCameraVectors(desiredOffset);
+}
+
+// --- メイン処理: 回転入力と追従 ---
+void Camera::FollowRotate(const glm::vec3& target, float rotateSpeed, float dt)
+{
+    // 1. 回転入力の処理
     if (Input::IsKeyPressed(GLFW_KEY_LEFT))
     {
-        Yaw -= Rotate_speed * dt;
-        rotated = true;
+        Yaw -= rotateSpeed * dt;
     }
-
     if (Input::IsKeyPressed(GLFW_KEY_RIGHT))
     {
-        Yaw += Rotate_speed * dt;
-        rotated = true;
+        Yaw += rotateSpeed * dt;
     }
 
-    if (rotated)
+    // 2. 初回フレームのみ、smoothedTarget を実際のターゲット位置で初期化
+    if (!isInitialized)
     {
-        glm::vec3 desiredOffset =
-            glm::vec3(
-                cos(glm::radians(Yaw)) * FollowDistance,
-                FollowHeight,
-                sin(glm::radians(Yaw)) * FollowDistance
-            );
-        //ターゲットにピッタリついて行ってる時のカメラ座標
-        glm::vec3 desiredPosition =
-        target + desiredOffset;
-        float alpha =
-        1.0f - std::exp(-10.0f * dt);
-        //少しターゲットから遅れているカメラ座標
-        glm::vec3 mixdesiredPosition = glm::mix(Position, desiredPosition, alpha);
-        //ターゲットから少し遅れた地点
-        glm::vec3 desiredTarget = mixdesiredPosition-desiredOffset;
-
-        Position = 
-            desiredTarget + desiredOffset;
-
-        Front =
-            glm::normalize(desiredTarget - Position);
-
-        Right =
-            glm::normalize(glm::cross(Front, WorldUp));
-
-        Up =
-            glm::normalize(glm::cross(Right, Front));
+        smoothedTarget = target;
+        isInitialized = true;
     }
+
+    // 3. 移動による遅れの計算（ターゲットの位置だけを滑らかに追従させる）
+    // ※これにより「移動のオフセット成分」が smoothedTarget に保持されます
+    float alpha = 1.0f - std::exp(-10.0f * dt);
+    smoothedTarget = glm::mix(smoothedTarget, target, alpha);
+
+    // 4. 現在の Yaw から最新のカメラオフセットベクトルを計算
+    glm::vec3 desiredOffset = CalculateOffset();
+
+    // 5. 【重要】「実際のターゲット」ではなく「遅れた仮想ターゲット」を中心にカメラを配置
+    Position = smoothedTarget + desiredOffset;
+
+    // 6. 注視点（smoothedTarget）を正しく向くように Front ベクトルを設定
+    // （desiredOffset の逆方向を向くため、中心ブレが一切起きません）
+    UpdateCameraVectors(desiredOffset);
+    // // 回転入力の処理
+    // if (Input::IsKeyPressed(GLFW_KEY_LEFT))
+    // {
+    //     Yaw -= rotateSpeed * dt;
+    // }
+    // if (Input::IsKeyPressed(GLFW_KEY_RIGHT))
+    // {
+    //     Yaw += rotateSpeed * dt;
+    // }
+
+    // // 常にターゲットを追従させる場合（回転していなくても追従を実行する）
+    // Follow(target, dt);
 }

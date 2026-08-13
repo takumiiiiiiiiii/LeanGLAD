@@ -50,9 +50,13 @@ class Camera
         void ProcessKeyboard(Camera_Movement direction, float deltaTime);
         void ProcessMouseMovement(float xoffset,float yoffset);
         void ProcessMouseScroll(float yoffset);
+        glm::vec3 CalculateOffset() const;
+        void UpdateCameraVectors(const glm::vec3& offset);
         void Follow(const glm::vec3& target, float dt);
         void FollowRotate(const glm::vec3& target,float Rotate_speed,float dt);
         
     private:
+        glm::vec3 smoothedTarget = glm::vec3(0.0f); // 遅れを含んだ注視点
+        bool isInitialized = false;                 // 初回フレーム判定用
         void updateCameraVectors();
 };
