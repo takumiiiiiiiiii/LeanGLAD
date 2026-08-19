@@ -1,5 +1,9 @@
 #include "Plane.h"
-Plane::Plane(float size)
+#include "../Shader.h"
+#include <iostream>
+
+Plane::Plane(float size, const Transform& initialTransform)
+    : Object(initialTransform)
 {
     float s = size * 0.5f;
 
@@ -12,10 +16,22 @@ Plane::Plane(float size)
         -s, 0.0f,  s,       0,1,0,            0,1
     };
 
-    unsigned int indices[] =
-    {
-        0,1,2,
-        2,3,0
+    // unsigned int indices[] =
+    // {
+    //     0,1,2,
+    //     2,3,0
+    // };
+    indices.assign({
+    0, 1, 2,
+    2, 3, 0
+    });
+
+    // 衝突判定用にpositionだけ抜き出して保持(描画用配列とは別物)
+    localPositions = {
+        {-s, 0.0f, -s},
+        { s, 0.0f, -s},
+        { s, 0.0f,  s},
+        {-s, 0.0f,  s}
     };
 
     glGenVertexArrays(1, &VAO);
@@ -32,9 +48,9 @@ Plane::Plane(float size)
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                 sizeof(indices),
-                 indices,
-                 GL_STATIC_DRAW);
+                indices.size() * sizeof(unsigned int), // データ全体のバイトサイズ
+                indices.data(),                        // メモリ先頭へのポインタ
+                GL_STATIC_DRAW);
 
     // Position
     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,8 * sizeof(float),(void*)0);
@@ -58,8 +74,9 @@ Plane::~Plane()
     glDeleteBuffers(1, &EBO);
 }
 
-void Plane::Draw()
+void Plane::Draw(Shader& shader)
 {
+    shader.setMat4("model", transform.GetModelMatrix());
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
@@ -68,4 +85,25 @@ void Plane::Draw()
 void Plane::SetTexture(GLuint textureID)
 {
     glBindTexture(GL_TEXTURE_2D, textureID);
+}
+
+void Plane::RegisterCollision(CollisionMesh& collision) const
+{
+    glm::mat4 model = transform.GetModelMatrix();
+
+    // ローカル座標をワールド座標へ変換
+    std::vector<glm::vec3> worldPositions;
+    worldPositions.reserve(localPositions.size());
+    for (const auto& p : localPositions) {
+        worldPositions.push_back(glm::vec3(model * glm::vec4(p, 1.0f)));
+    }
+    // indicesを3つずつ読んで三角形として登録
+    for (size_t i = 0; i + 2 < indices.size(); i += 3) {
+
+        collision.addTriangle(
+            worldPositions[indices[i]],
+            worldPositions[indices[i + 1]],
+            worldPositions[indices[i + 2]]
+        );
+    }
 }

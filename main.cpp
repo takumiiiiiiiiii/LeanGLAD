@@ -122,7 +122,7 @@ int main()
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;  
         //メインゲーム
-        game.UpdatePlaying(deltaTime);
+        game.Update(deltaTime);
         // カラーバッファを入れ替えて、描画した内容を実際に画面に表示（ダブルバッファリング）
         glfwSwapBuffers(window);
         // キーボードやマウスの操作などのイベントを検知・処理

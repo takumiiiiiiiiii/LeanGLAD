@@ -8,7 +8,10 @@
 #include "Shapes/Cube.h"
 
 Game::Game()
-    : player(Transform(), 1.0f),
+    : state(GameState::Playing),
+      player(collisionmesh,Transform(), 1.0f),
+      plane(10.0f),
+      cube(1.0f),
     shader(
           "../Shaders/VertexShader.SHADER",
           "../Shaders/FragmentShader.SHADER"
@@ -18,11 +21,10 @@ Game::Game()
 
 void Game::Initialize()
 {
+    player.SetPosition(glm::vec3{0.0,2.0,0.0});
     // //シェーダーの作成
     // shader = Shader("../Shaders/VertexShader.SHADER", "../Shaders/FragmentShader.SHADER");
     //テクスチャの作成
-
-
     //texture1
     glGenTextures(1,&texture1);
     glBindTexture(GL_TEXTURE_2D,texture1);
@@ -66,10 +68,17 @@ void Game::Initialize()
     shader.use();
     glUniform1i(glGetUniformLocation(shader.ID,"texture1"),0);
     shader.setInt("texture2",1);
+    //床初期化
+    plane.GetTransform().SetPosition(glm::vec3(0.0f, -1.0f, 0.0f));
+    //床のコリジョンを設定
+    plane.RegisterCollision(collisionmesh);
 
-    shader.use();
-    Player player = Player(Transform(), 1.0f);
+    //箱を出力
+    cube.GetTransform().SetPosition(glm::vec3(2.0f,0.5f,0.0f));
+    cube.RegisterCollision(collisionmesh);
 
+    //当たり判定のある頂点を表示
+    // collisionmesh.prindDebug();
 }
 
 void Game::Update(float dt){
@@ -91,6 +100,7 @@ void Game::Update(float dt){
 }
 
 void Game::UpdatePlaying(float dt){
+        shader.use();
         player.SetMoveSpeed(10);
         //カメラの移動
 
@@ -123,18 +133,12 @@ void Game::UpdatePlaying(float dt){
         shader.setMat4("view",view);
         //シェーダーに反映ture,mix);
 
-        //プレイヤーの更新
-        glm::mat4 Pmodel = glm::mat4(1.0f);
-        Pmodel = glm::translate(Pmodel,player.GetPosition());
-        shader.setMat4("model",Pmodel);
+        // 各ゲームオブジェクトが自分の Transform からモデル行列を設定して描画する。
+        player.Update(dt);
         player.MoveWithCameraOrientation(camera,dt);
-        player.Draw();
-        //床の更新
-        Plane plane;
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, -1.0f, 0.0f));
-        shader.setMat4("model",model);
-        plane.Draw();
+        player.Draw(shader);
+        plane.Draw(shader);
+        cube.Draw(shader);
 
         // glm::mat4 trans = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         // trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
@@ -144,7 +148,6 @@ void Game::UpdatePlaying(float dt){
         // glUniformMatrix4fv(transformLoc,1,GL_FALSE,glm::value_ptr(trans));
 
         // glBindVertexArray(VAO[0]);
-        Cube cube;
         for(unsigned int i = 0; i < 10; i++)
         {
             // glm::mat4 model = glm::mat4(1.0f);

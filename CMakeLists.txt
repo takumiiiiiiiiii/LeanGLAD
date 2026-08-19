@@ -5,7 +5,6 @@ if(WIN32)
 elseif(APPLE)
     project(OpenGLTest)
 endif()
-
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
@@ -28,10 +27,14 @@ add_executable(OpenGLTest
     Shapes/Plane.cpp
     Shapes/Cube.cpp
     Entity/Transform.cpp
+    Entity/Object.cpp
     Entity/Player.cpp
     Core/Input.cpp
     global.cpp
     Game.cpp
+    Collision/CollisionMesh.cpp
+    Collision/Triangle.h
+    Collision/RayCast.cpp
 )
 target_include_directories(OpenGLTest PRIVATE
     external/glfw/glfw-3.4/include
