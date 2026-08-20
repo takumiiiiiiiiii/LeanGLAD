@@ -69,7 +69,7 @@ void Game::Initialize()
     glUniform1i(glGetUniformLocation(shader.ID,"texture1"),0);
     shader.setInt("texture2",1);
     //床初期化
-    plane.GetTransform().SetPosition(glm::vec3(0.0f, -1.0f, 0.0f));
+    plane.GetTransform().SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     //床のコリジョンを設定
     plane.RegisterCollision(collisionmesh);
 
@@ -134,8 +134,8 @@ void Game::UpdatePlaying(float dt){
         //シェーダーに反映ture,mix);
 
         // 各ゲームオブジェクトが自分の Transform からモデル行列を設定して描画する。
-        player.Update(dt);
         player.MoveWithCameraOrientation(camera,dt);
+        player.Update(dt);
         player.Draw(shader);
         plane.Draw(shader);
         cube.Draw(shader);

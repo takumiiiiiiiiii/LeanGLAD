@@ -38,16 +38,25 @@ public:
     void Jump();
 private:
     //地面関連
+    glm::vec3 pendingMove{0.0f};
+    const float wallSkin = 0.005f;
+    const float edgeCheckThreshold = 0.2f;
+
+    bool AreAllCornersGrounded(const glm::vec3& pos) const;
+    glm::vec3 ResolveWallCollision(const glm::vec3& currentPos,const glm::vec3& desiredDelta) const;
+    glm::vec3 ResolveHorizontalMovement(const glm::vec3& currentPos,glm::vec3 desiredDelta) const;
+
     GroundHitInfo CheckGround();
+    GroundHitInfo CheckGroundCube();
     CollisionMesh& groundCollision; // 地面のCollisionMeshへの参照
     glm::vec3 velocity{0.0f};
     bool isGrounded = false;
-    bool isJump = false;
+    bool isJumpimg = false;
     const float rayOriginOffset   = 0.1f;  // 足元より少し上からRayを飛ばす
     const float groundedThreshold = 0.15f; // この距離以内なら接地とみなす
     //物理
-    const float gravity   = -0.18f;
-    const float jumpForce =  0.10f;
+    const float gravity   = -0.28f;
+    const float jumpForce =  0.1f;
     //サイズ
     float size = 0;
     //加速度と速度
