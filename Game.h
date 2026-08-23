@@ -32,6 +32,9 @@ class Game{
     // 画面の初期サイズ（幅と高さ）
     const unsigned int SCR_WIDTH = 800;
     const unsigned int SCR_HEIGHT = 600;
+    //マトリクス
+    glm::mat4 projection;
+    glm::mat4 view;
     //コリジョン
     CollisionMesh collisionmesh;
     Game();

@@ -117,6 +117,7 @@ int main()
     {
         // エスケープキーなどの入力入力を監視・処理
         processInput(window);
+
         //デルタタイムを取得
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;

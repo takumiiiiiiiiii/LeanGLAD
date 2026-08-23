@@ -77,6 +77,8 @@ void Game::Initialize()
     cube.GetTransform().SetPosition(glm::vec3(2.0f,0.5f,0.0f));
     cube.RegisterCollision(collisionmesh);
 
+    //
+
     //当たり判定のある頂点を表示
     // collisionmesh.prindDebug();
 }
@@ -100,6 +102,25 @@ void Game::Update(float dt){
 }
 
 void Game::UpdatePlaying(float dt){
+        //マウス入力
+        if (Input::IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_LEFT))
+        {
+            double mx, my;
+            Input::GetMousePosition(mx, my);
+
+            glm::vec3 rayOrigin, rayDir;
+            //クリック位置のワールド座標取得
+            screenPosToWorldRay(mx, my, SCR_WIDTH, SCR_HEIGHT, projection,view, rayOrigin,rayDir);
+
+            float dist;
+            glm::vec3 normal;
+            if (collisionmesh.raycast(rayOrigin, rayDir, dist, normal))
+            {
+                glm::vec3 hitPos = rayOrigin + rayDir * dist;
+                // PlaceObject(hitPos); // ここで実際にオブジェクトを生成・配置する
+            }
+        }
+
         shader.use();
         player.SetMoveSpeed(10);
         //カメラの移動
@@ -127,8 +148,8 @@ void Game::UpdatePlaying(float dt){
         //カメラ関連
         camera.Follow(player.GetPosition(),dt);
         camera.FollowRotate(player.GetPosition(), 100.0,dt);
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = camera.GetViewMatrix();
+        projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        view = camera.GetViewMatrix();
         shader.setMat4("projection", projection);
         shader.setMat4("view",view);
         //シェーダーに反映ture,mix);

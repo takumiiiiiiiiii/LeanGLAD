@@ -16,3 +16,33 @@ bool intersectRayTriangle(const glm::vec3& orig, const glm::vec3& dir, const Tri
     t = glm::dot(e2, q) * invDet;
     return t > EPS;
 }
+
+void screenPosToWorldRay(
+    double mouseX, double mouseY,
+    int screenWidth, int screenHeight,
+    const glm::mat4& view,
+    const glm::mat4& projection,
+    glm::vec3& outRayOrigin,
+    glm::vec3& outRayDir)
+{
+    // 1. スクリーン座標を正規化(左上原点, ピクセル) -> NDC(-1〜1, 中心原点)
+    // GLFWはY軸が下向きなので反転させる
+    float x = (2.0f * static_cast<float>(mouseX)) / screenWidth - 1.0f;
+    float y = 1.0f - (2.0f * static_cast<float>(mouseY)) / screenHeight;
+
+    // 2. 近平面(z=-1)と遠平面(z=1)の2点をクリップ座標として定義
+    glm::vec4 rayStartNDC(x, y, -1.0f, 1.0f);
+    glm::vec4 rayEndNDC(x, y, 1.0f, 1.0f);
+
+    // 3. view*projectionの逆行列でワールド座標に戻す
+    glm::mat4 invVP = glm::inverse(projection * view);
+
+    glm::vec4 rayStartWorld = invVP * rayStartNDC;
+    rayStartWorld /= rayStartWorld.w;
+
+    glm::vec4 rayEndWorld = invVP * rayEndNDC;
+    rayEndWorld /= rayEndWorld.w;
+
+    outRayOrigin = glm::vec3(rayStartWorld);
+    outRayDir = glm::normalize(glm::vec3(rayEndWorld - rayStartWorld));
+}
