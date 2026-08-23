@@ -34,6 +34,12 @@ Plane::Plane(float size, const Transform& initialTransform)
         {-s, 0.0f,  s}
     };
 
+    // 衝突判定用にpositionだけ抜き出して保持(描画用配列とは別物)
+    normals.reserve(sizeof(vertices) / (8 * sizeof(float)));
+    for (size_t i = 0; i < sizeof(vertices) / sizeof(float); i += 8) {
+        normals.emplace_back(vertices[i+3], vertices[i + 4], vertices[i + 5]);
+    }
+
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
@@ -103,7 +109,8 @@ void Plane::RegisterCollision(CollisionMesh& collision) const
         collision.addTriangle(
             worldPositions[indices[i]],
             worldPositions[indices[i + 1]],
-            worldPositions[indices[i + 2]]
+            worldPositions[indices[i + 2]],
+            normals[indices[i]]
         );
     }
 }

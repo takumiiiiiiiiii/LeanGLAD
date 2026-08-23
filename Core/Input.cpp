@@ -32,8 +32,8 @@ bool Input::IsMouseButtonJustPressed(int button)
 void Input::GetMousePosition(double& x, double& y)
 {
     glfwGetCursorPos(window, &x, &y);
-        std::cout<<"Clicked screen pos: ("
-                  << x<< ", " << y << ")" << std::endl;
+        // std::cout<<"Clicked screen pos: ("
+        //           << x<< ", " << y << ")" << std::endl;
 }
 
 void Input::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)

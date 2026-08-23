@@ -4,14 +4,11 @@
 #include <glm/gtx/string_cast.hpp> // glm::to_string用
     //メッシュの座標と法線ベクトルをまとめる
     void CollisionMesh::addTriangle(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2) {
-        
-        try{
-            glm::vec3 n = glm::normalize(glm::cross(v1 - v0, v2 - v0));
-            triangles.push_back({v0, v1, v2, n});
-        }catch(int i){
-            std::cout << "cantUse" << std::endl;
-        }
-
+        glm::vec3 n = glm::normalize(glm::cross(v1 - v0, v2 - v0));
+        triangles.push_back({v0, v1, v2, n});
+    }
+    void CollisionMesh::addTriangle(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2 ,const glm::vec3& n) {
+        triangles.push_back({v0, v1, v2, n});
     }
     //地面と交差しているかを判定
     bool CollisionMesh::raycast(const glm::vec3& origin, const glm::vec3& dir, float& outDist, glm::vec3& outNormal) const {

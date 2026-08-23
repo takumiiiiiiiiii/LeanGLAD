@@ -23,5 +23,6 @@ private:
     GLuint EBO;
 
     std::vector<glm::vec3> localPositions; // 衝突判定用:positionのみ
+    std::vector<glm::vec3> normals;
     std::vector<unsigned int> indices;     // 描画にもRay判定にも使う
 };

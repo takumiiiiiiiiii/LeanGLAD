@@ -8,6 +8,7 @@
 #include "Shapes/Plane.h"
 #include "Collision/CollisionMesh.h"
 #include "Shapes/Cube.h"
+#include "BlockWrold.h"
 
 enum class GameState
 {
@@ -25,6 +26,7 @@ class Game{
     Plane plane;
     Camera camera;
     Shader shader;
+    BlockWorld blockWorld;
     //画像のミックス具合
     float mix;
     //テクスチャ

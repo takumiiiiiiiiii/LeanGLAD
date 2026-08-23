@@ -2,7 +2,7 @@
 #include <vector>
 #include <memory>
 #include <glm/glm.hpp>
-#include "Cube.h"
+#include "Shapes/Cube.h"
 #include "Collision/CollisionMesh.h"
 
 class Shader;

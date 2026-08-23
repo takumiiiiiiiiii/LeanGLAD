@@ -9,9 +9,10 @@
 
 Game::Game()
     : state(GameState::Playing),
-      player(collisionmesh,Transform(), 1.0f),
+      player(collisionmesh,Transform(), 0.8f),
       plane(10.0f),
       cube(1.0f),
+      blockWorld(collisionmesh,1.0),
     shader(
           "../Shaders/VertexShader.SHADER",
           "../Shaders/FragmentShader.SHADER"
@@ -66,7 +67,7 @@ void Game::Initialize()
     stbi_image_free(data);
 
     shader.use();
-    glUniform1i(glGetUniformLocation(shader.ID,"texture1"),0);
+    shader.setInt("texture1",0);
     shader.setInt("texture2",1);
     //床初期化
     plane.GetTransform().SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -110,15 +111,23 @@ void Game::UpdatePlaying(float dt){
 
             glm::vec3 rayOrigin, rayDir;
             //クリック位置のワールド座標取得
-            screenPosToWorldRay(mx, my, SCR_WIDTH, SCR_HEIGHT, projection,view, rayOrigin,rayDir);
+            screenPosToWorldRay(mx, my, SCR_WIDTH, SCR_HEIGHT, view,projection, rayOrigin,rayDir);
 
             float dist;
             glm::vec3 normal;
             if (collisionmesh.raycast(rayOrigin, rayDir, dist, normal))
             {
                 glm::vec3 hitPos = rayOrigin + rayDir * dist;
+                std::cout <<"normal.x"<< normal.x;
+                std::cout <<"normal.y"<< normal.y;
+                std::cout <<"normal.z"<< normal.z << std::endl;
+                // ヒット面の法線方向にキューブ半径(0.5)分ずらす
+                // → Planeの上面をクリックすれば真上に、既存キューブの側面をクリックすればその横に置ける
+                glm::vec3 placePos = hitPos + normal * 0.5f;
                 // PlaceObject(hitPos); // ここで実際にオブジェクトを生成・配置する
+                blockWorld.PlaceBlock(placePos);
             }
+
         }
 
         shader.use();
@@ -126,7 +135,7 @@ void Game::UpdatePlaying(float dt){
         //カメラの移動
 
         //テクスチャをミックスする度合いを変更
-        mix = 1;
+        mix = 0;
         int mixTexture = glGetUniformLocation(shader.ID,"smileMix");
         glUniform1f(mixTexture,mix);
 
@@ -150,17 +159,21 @@ void Game::UpdatePlaying(float dt){
         camera.FollowRotate(player.GetPosition(), 100.0,dt);
         projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         view = camera.GetViewMatrix();
+        
         shader.setMat4("projection", projection);
         shader.setMat4("view",view);
         //シェーダーに反映ture,mix);
 
         // 各ゲームオブジェクトが自分の Transform からモデル行列を設定して描画する。
+        shader.setInt("texture1",1);
         player.MoveWithCameraOrientation(camera,dt);
         player.Update(dt);
         player.Draw(shader);
+        shader.setInt("texture1",0);
+
         plane.Draw(shader);
         cube.Draw(shader);
-
+        blockWorld.DrawAll(shader);
         // glm::mat4 trans = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         // trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
         // trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));

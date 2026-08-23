@@ -99,6 +99,7 @@ int main()
     // GLADの初期化。これを行わないと最初のOpenGL関数呼び出しでクラッシュする
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
+        
         std::cerr << "Failed to initialize GLAD" << std::endl;
         glfwDestroyWindow(window);
         glfwTerminate();

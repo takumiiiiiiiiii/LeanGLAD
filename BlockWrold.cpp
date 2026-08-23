@@ -1,33 +1,40 @@
-#pragma once
-#include <vector>
-#include <memory>
-#include <glm/glm.hpp>
-#include "Cube.h"
-#include "Collision/CollisionMesh.h"
+#include "BlockWrold.h"
 
-class Shader;
-
-// 配置済みブロック1個分の情報(位置とCubeの実体をまとめて保持)
-struct PlacedBlock
+BlockWorld::BlockWorld(CollisionMesh& collisionMesh, float cubeSize)
+    : collisionMesh(collisionMesh), cubeSize(cubeSize)
 {
-    glm::vec3 position;
-    std::unique_ptr<Cube> cube;
-};
+}
 
-class BlockWorld
+bool BlockWorld::IsOccupied(const glm::vec3& worldPos) const
 {
-public:
-    explicit BlockWorld(CollisionMesh& collisionMesh, float cubeSize = 1.0f);
+    // キューブサイズの1割程度を許容誤差として、同じセルへの重複配置を防ぐ
+    const float epsilon = cubeSize * 0.1f;
+    for (const auto& block : blocks)
+    {
+        if (glm::distance(block.position, worldPos) < epsilon)
+            return true;
+    }
+    return false;
+}
 
-    // worldPosにキューブ1個分の空きがあれば配置する
-    void PlaceBlock(const glm::vec3& worldPos);
+void BlockWorld::PlaceBlock(const glm::vec3& worldPos)
+{
+    if (IsOccupied(worldPos))
+        return;
+    glm::vec3 offset  = worldPos;
+    auto cube = std::make_unique<Cube>(cubeSize);
+    cube->SetTranformPosition(offset);
 
-    void DrawAll(Shader& shader);
+    // 新しく置いたキューブも次のRaycastの対象にする(これがないと2段目を積めない)
+    cube->RegisterCollision(collisionMesh);
 
-private:
-    bool IsOccupied(const glm::vec3& worldPos) const;
+    blocks.push_back(PlacedBlock{ offset, std::move(cube) });
+}
 
-    CollisionMesh& collisionMesh;
-    float cubeSize;
-    std::vector<PlacedBlock> blocks;
-};
+void BlockWorld::DrawAll(Shader& shader)
+{
+    for (auto& block : blocks)
+    {
+        block.cube->Draw(shader);
+    }
+}
