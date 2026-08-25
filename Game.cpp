@@ -70,7 +70,7 @@ void Game::Initialize()
     shader.setInt("texture1",0);
     shader.setInt("texture2",1);
     //床初期化
-    plane.GetTransform().SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+    // plane.GetTransform().SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     //床のコリジョンを設定
     plane.RegisterCollision(collisionmesh);
 
@@ -117,10 +117,17 @@ void Game::UpdatePlaying(float dt){
             glm::vec3 normal;
             if (collisionmesh.raycast(rayOrigin, rayDir, dist, normal))
             {
+                // glm::vec3 hitPos = rayOrigin + rayDir * dist;
+                // std::cout <<"hitPos"<<hitPos.x <<":";
+                // std::cout           <<hitPos.y <<":";
+                // std::cout           <<hitPos.z << std::endl;
+                std::cout << "rayOrigin.y=" << rayOrigin.y
+                        << " dist=" << dist
+                        << " normal=(" << normal.x << "," << normal.y << "," << normal.z << ")"
+                        << std::endl;
+
                 glm::vec3 hitPos = rayOrigin + rayDir * dist;
-                std::cout <<"normal.x"<< normal.x;
-                std::cout <<"normal.y"<< normal.y;
-                std::cout <<"normal.z"<< normal.z << std::endl;
+                std::cout << "hitPos.y=" << hitPos.y << std::endl;
                 // ヒット面の法線方向にキューブ半径(0.5)分ずらす
                 // → Planeの上面をクリックすれば真上に、既存キューブの側面をクリックすればその横に置ける
                 glm::vec3 placePos = hitPos + normal * 0.5f;

@@ -19,16 +19,24 @@ bool BlockWorld::IsOccupied(const glm::vec3& worldPos) const
 
 void BlockWorld::PlaceBlock(const glm::vec3& worldPos)
 {
-    if (IsOccupied(worldPos))
+    // セルインデックスをfloorで求め、そのセルの中心(index + 0.5)*cubeSizeにスナップする。
+    // Cubeは中心基準(-0.5〜+0.5)なので、中心をセル境界の真ん中に合わせる必要がある。
+    // truncではなくfloorを使うことで、負の座標側でもズレなく動作する。
+    glm::vec3 snapped;
+    snapped.x = (std::floor(worldPos.x / cubeSize) + 0.5f) * cubeSize;
+    snapped.y = (std::floor(worldPos.y / cubeSize) + 0.5f) * cubeSize;
+    snapped.z = (std::floor(worldPos.z / cubeSize) + 0.5f) * cubeSize;
+
+    if (IsOccupied(snapped))
         return;
-    glm::vec3 offset  = worldPos;
+
     auto cube = std::make_unique<Cube>(cubeSize);
-    cube->SetTranformPosition(offset);
+    cube->SetTranformPosition(snapped);
 
     // 新しく置いたキューブも次のRaycastの対象にする(これがないと2段目を積めない)
     cube->RegisterCollision(collisionMesh);
 
-    blocks.push_back(PlacedBlock{ offset, std::move(cube) });
+    blocks.push_back(PlacedBlock{ snapped, std::move(cube) });
 }
 
 void BlockWorld::DrawAll(Shader& shader)
