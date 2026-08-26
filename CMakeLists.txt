@@ -9,6 +9,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/external/imgui)
 
 if(APPLE)
     find_package(glfw3 REQUIRED)
@@ -40,6 +41,8 @@ add_executable(OpenGLTest
 target_include_directories(OpenGLTest PRIVATE
     external/glfw/glfw-3.4/include
     external/glad/include
+    ${IMGUI_DIR}
+    ${IMGUI_DIR}/backends
 )
 if(APPLE)
     target_link_libraries(OpenGLTest PRIVATE

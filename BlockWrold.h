@@ -4,7 +4,9 @@
 #include <glm/glm.hpp>
 #include "Shapes/Cube.h"
 #include "Collision/CollisionMesh.h"
-
+#include <fstream>
+#include <sstream>
+#include <iostream>
 class Shader;
 
 // 配置済みブロック1個分の情報(位置とCubeの実体をまとめて保持)
@@ -24,8 +26,15 @@ public:
 
     void DrawAll(Shader& shader);
 
+    bool SaveToFile(const std::string& filepath,const std::string& filename) const;
+
+
+    glm::vec3 parseLine (const std::string& line, std::size_t lineNumber) const;
+    std::vector<glm::vec3> readCoordinatesFromFile(const std::string& filepath) const;
+    bool LoadCubeStateFromFile(const std::string& filepath);
 private:
     bool IsOccupied(const glm::vec3& worldPos) const;
+    //ファイルの処理
 
     CollisionMesh& collisionMesh;
     float cubeSize;

@@ -7,6 +7,7 @@
 #include "Shapes/Plane.h"
 #include "Shapes/Cube.h"
 
+
 Game::Game()
     : state(GameState::Playing),
       player(collisionmesh,Transform(), 0.8f),
@@ -135,6 +136,12 @@ void Game::UpdatePlaying(float dt){
                 blockWorld.PlaceBlock(placePos);
             }
 
+        }
+        if(Input::IsKeyPressed(GLFW_KEY_Z)){
+            blockWorld.SaveToFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates.txt","blocks");
+        }
+        if(Input::IsKeyPressed(GLFW_KEY_X)){
+            blockWorld.LoadCubeStateFromFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates.txt");
         }
 
         shader.use();
