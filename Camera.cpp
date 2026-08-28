@@ -20,6 +20,7 @@ Camera::Camera(float posX, float posY, float posZ,
       MouseSensitivity(SENSITIVITY),
       Zoom(ZOOM)
 {
+    
     Position = glm::vec3(posX, posY, posZ);
     WorldUp = glm::vec3(upX, upY, upZ);
     Yaw = yaw;

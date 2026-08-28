@@ -125,8 +125,12 @@ void Player::TrunBlock(){
 
     if(Input::IsKeyPressed(GLFW_KEY_B)){
         isBlock = true;
+        kinematics.acceleration = glm::vec3 (0.0);
+        kinematics.velocity= glm::vec3 (0.0);
     }else{
+        isBlock = false;
         size = 0.8;
+
         cube.SetScale(glm::vec3(size,size,size));
     }
 }

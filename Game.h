@@ -22,7 +22,6 @@ class Game{
     public:
     GameState state;
     Player player;
-    Cube cube;
     Plane plane;
     Camera camera;
     Shader shader;

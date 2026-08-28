@@ -12,7 +12,6 @@ Game::Game()
     : state(GameState::Playing),
       player(collisionmesh,Transform(), 0.8f),
       plane(10.0f),
-      cube(1.0f),
       blockWorld(collisionmesh,1.0),
     shader(
           "../Shaders/VertexShader.SHADER",
@@ -75,14 +74,8 @@ void Game::Initialize()
     //床のコリジョンを設定
     plane.RegisterCollision(collisionmesh);
 
-    //箱を出力
-    cube.GetTransform().SetPosition(glm::vec3(2.0f,0.5f,0.0f));
-    cube.RegisterCollision(collisionmesh);
-
-    //
-
-    //当たり判定のある頂点を表示
-    // collisionmesh.prindDebug();
+    blockWorld.LoadCubeStateFromFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates.txt");
+    
 }
 
 void Game::Update(float dt){
@@ -187,7 +180,6 @@ void Game::UpdatePlaying(float dt){
         shader.setInt("texture1",0);
 
         plane.Draw(shader);
-        cube.Draw(shader);
         blockWorld.DrawAll(shader);
         // glm::mat4 trans = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         // trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
