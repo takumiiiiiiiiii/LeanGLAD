@@ -6,7 +6,8 @@ Player::Player(CollisionMesh& groundCollision,const Transform& initialTransform,
     : Object(initialTransform),
       cube(size),
       moveSpeed(1.0f),
-      groundCollision(groundCollision)
+      groundCollision(groundCollision),
+      id_(next_id_++)
 {
     this->size = size;
     std::cout << kinematics.velocity.y << std::endl;
@@ -39,41 +40,15 @@ void Player::Update(float deltaTime)
     pendingMove = glm::vec3(0.0f); // 次フレーム用にリセット
 }
 
-void Player::Move(float deltaTime)
+void Player::Draw(Shader& shader)
 {
-    glm::vec3 dir(0.0f);
-
-    if (Input::IsKeyPressed(GLFW_KEY_W))
-    {
-        std::cout << "Press W" << std::endl;
-        dir.z -= 1.0f;
-    }
-
-    if (Input::IsKeyPressed(GLFW_KEY_S))
-    {
-        std::cout << "Press S" << std::endl;
-        dir.z += 1.0f;
-    }
-
-    if (Input::IsKeyPressed(GLFW_KEY_A))
-    {
-        std::cout << "Press A" << std::endl;
-        dir.x -= 1.0f;
-    }
-
-    if (Input::IsKeyPressed(GLFW_KEY_D))
-    {
-        std::cout << "Press D" << std::endl;
-        dir.x += 1.0f;
-    }
-
-    if (glm::length(dir) > 0.0f)
-    {
-        dir = glm::normalize(dir);
-    }
-
-    pendingMove += dir * moveSpeed * deltaTime; // 移動量を変数に代入
+    shader.setMat4("model", transform.GetModelMatrix());
+    cube.SetTranformPosition(this->transform.GetPosition());
+    cube.Draw(shader);
 }
+
+
+
 
 //カメラ向きを基準に移動
 void Player::MoveWithCameraOrientation(Camera& camera, float deltaTime)
@@ -122,13 +97,44 @@ void Player::MoveWithCameraOrientation(Camera& camera, float deltaTime)
     pendingMove += movement * moveSpeed * deltaTime; 
 }
 
+//ジャンプ
+void Player::Jump()
+{
+    
+    if(Input::IsKeyPressed(GLFW_KEY_SPACE)){
+        //std::cout << isGrounded << isJump <<std::endl;
+        if (!isJumpimg) {
+            kinematics.velocity.y = jumpForce;
+
+        }
+        isJumpimg = true;
+    }
+
+}
+
+void Player::TrunBlock(){
+    if(isBlock){
+        size = 1.0;
+        cube.SetScale(glm::vec3(size,size,size));
+        glm::vec3 snapped;
+        snapped.x = (std::floor(transform.GetPosition().x / size) + 0.5f) * size;
+        snapped.y = (std::floor(transform.GetPosition().y / size) + 0.5f) * size;
+        snapped.z = (std::floor(transform.GetPosition().z / size) + 0.5f) * size;
+        transform.SetPosition(snapped); 
+    }
+
+    if(Input::IsKeyPressed(GLFW_KEY_B)){
+        isBlock = true;
+    }else{
+        size = 0.8;
+        cube.SetScale(glm::vec3(size,size,size));
+    }
+}
+
+//重力
 void Player::UpdateGravity(float deltaTime){
     glm::vec3 movement(0.0f);
     transform.Translate(movement*deltaTime);
-}
-void Player::MoveWithVector(const glm::vec3& direction, float deltaTime)
-{
-    transform.Translate(direction * moveSpeed * deltaTime);
 }
 
 void Player::SetPosition(const glm::vec3& pos)
@@ -147,15 +153,7 @@ glm::vec3 Player::GetPosition() const
     return transform.GetPosition();
 }
 
-
-
-void Player::Draw(Shader& shader)
-{
-    shader.setMat4("model", transform.GetModelMatrix());
-    cube.SetTranformPosition(this->transform.GetPosition());
-    cube.Draw(shader);
-}
-
+//地面チェック
 GroundHitInfo Player::CheckGround(){
     glm::vec3 origin = transform.GetPosition() + glm::vec3(0.0f, rayOriginOffset-size/2.0f, 0.0f);
     glm::vec3 dir(0.0f, -1.0f, 0.0f);
@@ -207,19 +205,6 @@ GroundHitInfo Player::CheckGroundCube(){
     return info;
 }
 
-void Player::Jump()
-{
-    
-    if(Input::IsKeyPressed(GLFW_KEY_SPACE)){
-        //std::cout << isGrounded << isJump <<std::endl;
-        if (!isJumpimg) {
-            kinematics.velocity.y = jumpForce;
-
-        }
-        isJumpimg = true;
-    }
-
-}
 //地面とのコリジョン
 bool Player::AreAllCornersGrounded(const glm::vec3& pos) const{
     float half = size /2.0f;

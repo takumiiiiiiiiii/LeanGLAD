@@ -25,18 +25,31 @@ class Player : public Object
 public:
     explicit Player(CollisionMesh& groundCollision,const Transform& initialTransform = Transform(), float size = 1.0f);
     void Update(float deltaTime) override;
-
     void Draw(Shader& shader) override;
-    void Move(float deltaTime);
-    void MoveWithCameraOrientation(Camera& camera, float deltaTime);
-    void UpdateGravity(float deltaTime);
-    void MoveWithVector(const glm::vec3& direction, float deltaTime);
 
+    //操作
+    void MoveWithCameraOrientation(Camera& camera, float deltaTime);
+    void Jump();
+    void TrunBlock();
+
+    //物理
+    void UpdateGravity(float deltaTime);
+
+    //ゲッター・セッター
     glm::vec3 GetPosition() const;
     void SetPosition(const glm::vec3& pos);
     void SetMoveSpeed(float speed);
-    void Jump();
+
+
+
+    int getId() const { return id_; }
 private:
+    //固有ID
+    static inline int next_id_ = 1; // C++17以降はinline初期化が可能
+    const int id_;                  // オブジェクト固有のID（変更不可にするためconst）
+    //ボックス化
+    bool isBlock = false;
+
     //地面関連
     glm::vec3 pendingMove{0.0f};
     const float wallSkin = 0.005f;

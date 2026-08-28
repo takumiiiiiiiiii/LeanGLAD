@@ -183,6 +183,7 @@ void Game::UpdatePlaying(float dt){
         player.MoveWithCameraOrientation(camera,dt);
         player.Update(dt);
         player.Draw(shader);
+        player.TrunBlock();
         shader.setInt("texture1",0);
 
         plane.Draw(shader);

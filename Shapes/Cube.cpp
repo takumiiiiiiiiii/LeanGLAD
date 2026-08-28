@@ -1,7 +1,33 @@
 #include "Cube.h"
 #include "../Shader.h"
-Cube::Cube(float size)
+Cube::Cube(float input_size)
 {
+   CubeInit(input_size);
+}
+
+
+
+Cube::~Cube()
+{
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+}
+
+void Cube::Draw(Shader& shader)
+{
+    shader.setMat4("model", transform.GetModelMatrix());
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glBindVertexArray(0);
+}
+
+void Cube::SetTexture(GLuint textureID)
+{
+    glBindTexture(GL_TEXTURE_2D, textureID);
+}
+
+void Cube::CubeInit(float input_size){
+     this->size = input_size;
     float s = size * 0.5f;
 
     // Position(x,y,z)      Normal(x,y,z)      TexCoord(u,v)
@@ -94,27 +120,12 @@ Cube::Cube(float size)
     glBindVertexArray(0);
 }
 
-Cube::~Cube()
-{
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-}
-
-void Cube::Draw(Shader& shader)
-{
-    shader.setMat4("model", transform.GetModelMatrix());
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    glBindVertexArray(0);
-}
-
-void Cube::SetTexture(GLuint textureID)
-{
-    glBindTexture(GL_TEXTURE_2D, textureID);
-}
-
 void Cube::SetTranformPosition(glm::vec3 position){
     this->transform.SetPosition(position);
+}
+void Cube::SetScale(glm::vec3 scale) {
+    this->transform.SetScale(scale);
+    CubeInit(scale.x);
 }
 
 void Cube::RegisterCollision(CollisionMesh& collision) const

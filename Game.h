@@ -43,4 +43,5 @@ class Game{
     void Initialize();
     void Update(float dt);
     void UpdatePlaying(float dt);
+    
 };
