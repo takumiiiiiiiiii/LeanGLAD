@@ -22,6 +22,7 @@ Game::Game()
 
 void Game::Initialize()
 {
+
     player.SetPosition(glm::vec3{0.0,2.0,0.0});
     // //シェーダーの作成
     // shader = Shader("../Shaders/VertexShader.SHADER", "../Shaders/FragmentShader.SHADER");
@@ -136,6 +137,11 @@ void Game::UpdatePlaying(float dt){
         if(Input::IsKeyPressed(GLFW_KEY_X)){
             blockWorld.LoadCubeStateFromFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates.txt");
         }
+        if(Input::IsKeyJustPressed(GLFW_KEY_B)){
+            isBlocksSlect = !isBlocksSlect;
+        }
+
+
 
         shader.use();
         player.SetMoveSpeed(10);
@@ -171,14 +177,19 @@ void Game::UpdatePlaying(float dt){
         shader.setMat4("view",view);
         //シェーダーに反映ture,mix);
 
-        // 各ゲームオブジェクトが自分の Transform からモデル行列を設定して描画する。
-        shader.setInt("texture1",1);
-        player.MoveWithCameraOrientation(camera,dt);
-        player.Update(dt);
-        player.Draw(shader);
-        player.TrunBlock();
-        shader.setInt("texture1",0);
+        // Playerの設定
+        shader.setInt("texture1",1);//プレイヤーのテクスチャ
+        if(isBlocksSlect){
 
+        }else{
+            player.MoveWithCameraOrientation(camera,dt);
+            player.Update(dt);
+        }
+        player.Draw(shader);
+        player.TrunBlock(isBlocksSlect,blockWorld);
+
+        //地形の描画
+        shader.setInt("texture1",0);
         plane.Draw(shader);
         blockWorld.DrawAll(shader);
         // glm::mat4 trans = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first

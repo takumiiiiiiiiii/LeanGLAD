@@ -116,6 +116,8 @@ int main()
     // ウィンドウが閉じられる指示が出るまで、メインループを繰り返す
     while (!glfwWindowShouldClose(window))
     {
+        // ★フレームの最初に必ずUpdateを呼び出す
+        Input::Update();
         // エスケープキーなどの入力入力を監視・処理
         processInput(window);
 

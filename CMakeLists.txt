@@ -37,6 +37,7 @@ add_executable(OpenGLTest
     Collision/Triangle.h
     Collision/RayCast.cpp
     BlockWrold.cpp
+    Entity/PlayerManager.cpp
 )
 target_include_directories(OpenGLTest PRIVATE
     external/glfw/glfw-3.4/include

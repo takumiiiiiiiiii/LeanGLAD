@@ -26,6 +26,14 @@ public:
 
     void DrawAll(Shader& shader);
 
+    //ワールド座標をせる座標に
+    glm::vec3 SnapToGrid(const glm::vec3& worldPos)const;
+    //選択した座標にブロックが存在するか
+    bool CheckBlockSelectedPos(const glm::vec3& Pos)const;
+    //
+    bool GetBlockPosition(const glm::vec3& pos,glm::vec3& blockPosition)const;
+    bool DeleteBlockSelected(const glm::vec3& Pos);
+
     bool SaveToFile(const std::string& filepath,const std::string& filename) const;
 
 

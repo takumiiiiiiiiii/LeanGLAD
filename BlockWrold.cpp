@@ -3,6 +3,55 @@
 BlockWorld::BlockWorld(CollisionMesh& collisionMesh, float cubeSize)
     : collisionMesh(collisionMesh), cubeSize(cubeSize)
 {
+    
+}
+
+ //ワールド座標をせる座標に
+glm::vec3 BlockWorld::SnapToGrid(const glm::vec3& worldPos)const{
+    glm::vec3 cellPos;
+    cellPos.x = (std::floor(worldPos.x / cubeSize) + 0.5f) * cubeSize;
+    cellPos.y = (std::floor(worldPos.y / cubeSize) + 0.5f) * cubeSize;
+    cellPos.z = (std::floor(worldPos.z / cubeSize) + 0.5f) * cubeSize;
+    return cellPos;
+};
+//選択した座標にブロックが存在するか
+bool BlockWorld::CheckBlockSelectedPos(const glm::vec3& Pos)const{
+    glm::vec3 inputcellPos = SnapToGrid(Pos);
+    glm::vec3 blockCellPos;
+    for(const auto& block:blocks){
+        blockCellPos = SnapToGrid(block.position);
+        if(blockCellPos == inputcellPos){
+            return true;
+        }
+    }
+    return false;
+}
+//
+bool BlockWorld::GetBlockPosition(const glm::vec3& pos,glm::vec3& blockPosition)const{
+    const glm::vec3 cellPos = SnapToGrid(pos);
+    for (const auto& block : blocks)
+    {
+        if (SnapToGrid(block.position) == cellPos)
+        {
+            blockPosition = block.position;
+            return true;
+        }
+    }
+    return false;
+}
+bool BlockWorld::DeleteBlockSelected(const glm::vec3& Pos) {
+    const glm::vec3 cellPos = SnapToGrid(Pos);
+
+    for (auto it = blocks.begin(); it != blocks.end(); ++it)
+    {
+        if (SnapToGrid(it->position) == cellPos)
+        {
+            blocks.erase(it);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool BlockWorld::IsOccupied(const glm::vec3& worldPos) const

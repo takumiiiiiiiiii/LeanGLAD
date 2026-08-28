@@ -8,6 +8,7 @@
 #include "../Core/Input.h"
 #include "../Camera.h"
 #include "../Phythiks/Kinematics.h"
+#include "../BlockWrold.h"
 
 //Shaderクラスの前方宣言
 #define G = 9.81;
@@ -30,7 +31,7 @@ public:
     //操作
     void MoveWithCameraOrientation(Camera& camera, float deltaTime);
     void Jump();
-    void TrunBlock();
+    void TrunBlock(bool isBlock,BlockWorld& blockWorld);
 
     //物理
     void UpdateGravity(float deltaTime);
@@ -71,7 +72,9 @@ private:
     const float gravity   = -0.28f;
     const float jumpForce =  0.1f;
     //サイズ
+
     float size = 0;
+
     //加速度と速度
     Kinematics kinematics;
     //描画に使用するオブジェクト

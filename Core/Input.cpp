@@ -1,45 +1,69 @@
 #include "Input.h"
-#include <iostream>
+
 GLFWwindow* Input::window = nullptr;
-bool Input::mouseJustPressed[GLFW_MOUSE_BUTTON_LAST + 1] = { false };
+
+bool Input::currentKeys[GLFW_KEY_LAST + 1] = { false };
+bool Input::previousKeys[GLFW_KEY_LAST + 1] = { false };
+
+bool Input::currentMouseButtons[GLFW_MOUSE_BUTTON_LAST + 1] = { false };
+bool Input::previousMouseButtons[GLFW_MOUSE_BUTTON_LAST + 1] = { false };
 
 void Input::SetWindow(GLFWwindow* w)
 {
     window = w;
-    glfwSetMouseButtonCallback(window, Input::MouseButtonCallback);
 }
 
+// ★毎フレームのループ先頭（glfwPollEventsの直後）で必ず呼び出す
+void Input::Update()
+{
+    if (!window) return;
+
+    // キーボードの状態を更新
+    for (int i = 0; i <= GLFW_KEY_LAST; ++i)
+    {
+        previousKeys[i] = currentKeys[i];
+        currentKeys[i] = (glfwGetKey(window, i) == GLFW_PRESS);
+    }
+
+    // マウスボタンの状態を更新
+    for (int i = 0; i <= GLFW_MOUSE_BUTTON_LAST; ++i)
+    {
+        previousMouseButtons[i] = currentMouseButtons[i];
+        currentMouseButtons[i] = (glfwGetMouseButton(window, i) == GLFW_PRESS);
+    }
+}
+
+// 押しっぱなし判定
 bool Input::IsKeyPressed(int key)
 {
-    return glfwGetKey(window, key) == GLFW_PRESS;
+    if (key < 0 || key > GLFW_KEY_LAST) return false;
+    return currentKeys[key];
 }
 
+// ★押した瞬間のみ判定 (前フレーム=離していて、現フレーム=押されている)
+bool Input::IsKeyJustPressed(int key)
+{
+    if (key < 0 || key > GLFW_KEY_LAST) return false;
+    return currentKeys[key] && !previousKeys[key];
+}
+
+// マウス押しっぱなし判定
 bool Input::IsMouseButtonPressed(int button)
 {
-    return glfwGetMouseButton(window, button) == GLFW_PRESS;
+    if (button < 0 || button > GLFW_MOUSE_BUTTON_LAST) return false;
+    return currentMouseButtons[button];
 }
 
+// ★マウスを押した瞬間のみ判定
 bool Input::IsMouseButtonJustPressed(int button)
 {
-    if (button < 0 || button > GLFW_MOUSE_BUTTON_LAST)
-        return false;
-
-    bool result = mouseJustPressed[button];
-    mouseJustPressed[button] = false; // 読んだら消費する
-    return result;
+    if (button < 0 || button > GLFW_MOUSE_BUTTON_LAST) return false;
+    return currentMouseButtons[button] && !previousMouseButtons[button];
 }
 
 void Input::GetMousePosition(double& x, double& y)
 {
-    glfwGetCursorPos(window, &x, &y);
-        // std::cout<<"Clicked screen pos: ("
-        //           << x<< ", " << y << ")" << std::endl;
-}
-
-void Input::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
-{
-    if (action == GLFW_PRESS && button <= GLFW_MOUSE_BUTTON_LAST)
-    {
-        mouseJustPressed[button] = true;
+    if (window) {
+        glfwGetCursorPos(window, &x, &y);
     }
 }

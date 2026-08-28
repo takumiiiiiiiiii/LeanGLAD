@@ -111,28 +111,29 @@ void Player::Jump()
     }
 
 }
-
-void Player::TrunBlock(){
-    if(isBlock){
-        size = 1.0;
-        cube.SetScale(glm::vec3(size,size,size));
-        glm::vec3 snapped;
-        snapped.x = (std::floor(transform.GetPosition().x / size) + 0.5f) * size;
-        snapped.y = (std::floor(transform.GetPosition().y / size) + 0.5f) * size;
-        snapped.z = (std::floor(transform.GetPosition().z / size) + 0.5f) * size;
-        transform.SetPosition(snapped); 
-    }
-
-    if(Input::IsKeyPressed(GLFW_KEY_B)){
-        isBlock = true;
+void Player::TrunBlock(bool isBlock,BlockWorld& blockWorld){
+    this->isBlock = isBlock;
+    if(this->isBlock){
         kinematics.acceleration = glm::vec3 (0.0);
         kinematics.velocity= glm::vec3 (0.0);
+        size = 1.0;
+        cube.SetScale(glm::vec3(size,size,size));
+        transform.SetPosition(blockWorld.SnapToGrid(transform.GetPosition()));
     }else{
-        isBlock = false;
         size = 0.8;
-
         cube.SetScale(glm::vec3(size,size,size));
     }
+
+    // if(Input::IsKeyJustPressed(GLFW_KEY_B)){
+    //     if(isBlock){
+    //         isBlock = false;
+    //         size = 0.8;
+    //         cube.SetScale(glm::vec3(size,size,size));
+    //     }else{
+    //         isBlock = true;
+    //     }
+        
+    // }
 }
 
 //重力

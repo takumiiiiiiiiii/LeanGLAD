@@ -20,6 +20,7 @@ enum class GameState
 
 class Game{
     public:
+    bool isBlocksSlect=false;
     GameState state;
     Player player;
     Plane plane;
