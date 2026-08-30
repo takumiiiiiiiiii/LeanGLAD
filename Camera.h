@@ -24,9 +24,16 @@ const float SPEED       =  2.5f;
 const float SENSITIVITY =  0.1f;
 const float ZOOM        =  45.0f;
 
+//-----------------------------------
+//     クラス
+//-----------------------------------
+
 class Camera
 {
     
+    //-----------------------------------
+    //     パブリック関数
+    //-----------------------------------
     public:
         glm::vec3 Position;
         glm::vec3 Front;

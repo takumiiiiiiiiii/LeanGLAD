@@ -111,16 +111,27 @@ void Player::Jump()
     }
 
 }
-void Player::TrunBlock(bool isBlock,BlockWorld& blockWorld){
+void Player::TrunBlock(bool isBlock,BlockWorld& blockWorld,float deltaTime){
+
     this->isBlock = isBlock;
     if(this->isBlock){
+        constexpr float Smoothness = 40.0f;
+        float alphaSize = 1.0f - std::exp(-Smoothness * deltaTime);
+        float alphaPos = 1.0f - std::exp(-Smoothness * deltaTime);
+        // カメラ位置を補間
+        size = glm::mix(size, 1.0f, alphaSize);
+
         kinematics.acceleration = glm::vec3 (0.0);
         kinematics.velocity= glm::vec3 (0.0);
-        size = 1.0;
         cube.SetScale(glm::vec3(size,size,size));
-        transform.SetPosition(blockWorld.SnapToGrid(transform.GetPosition()));
+        
+        transform.SetPosition(glm::mix(transform.GetPosition(),blockWorld.SnapToGrid(transform.GetPosition()),alphaPos));
     }else{
-        size = 0.8;
+        constexpr float Smoothness = 40.0f;
+        float alphaSize = 1.0f - std::exp(-Smoothness * deltaTime);
+        float alphaPos = 1.0f - std::exp(-Smoothness * deltaTime);
+        // カメラ位置を補間
+        size = glm::mix(size, 0.8f, alphaSize );
         cube.SetScale(glm::vec3(size,size,size));
     }
 

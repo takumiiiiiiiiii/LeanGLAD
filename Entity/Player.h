@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include "Object.h"
 #include "../Collision/CollisionMesh.h"
 #include "../Shapes/Cube.h"
@@ -31,7 +32,7 @@ public:
     //操作
     void MoveWithCameraOrientation(Camera& camera, float deltaTime);
     void Jump();
-    void TrunBlock(bool isBlock,BlockWorld& blockWorld);
+    void TrunBlock(bool isBlock,BlockWorld& blockWorld,float deltaTime);
 
     //物理
     void UpdateGravity(float deltaTime);
@@ -74,6 +75,7 @@ private:
     //サイズ
 
     float size = 0;
+    
 
     //加速度と速度
     Kinematics kinematics;

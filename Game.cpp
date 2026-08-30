@@ -245,7 +245,7 @@ void Game::UpdatePlaying(float dt){
 
         }else{
             //自分以外のブロックに移動していた場合
-            if(isBlocksSlectPrev&&player.GetPosition()!=selectCube){
+            if(isBlocksSlectPrev&&blockWorld.SnapToGrid(player.GetPosition())!=selectCube){
                 blockWorld.DeleteBlockSelected(selectCube);
                 blockWorld.PlaceBlock(player.GetPosition());
                 player.SetPosition(selectCube); 
@@ -258,7 +258,7 @@ void Game::UpdatePlaying(float dt){
             player.Update(dt);
         }
         player.Draw(shader);
-        player.TrunBlock(isBlocksSlect,blockWorld);
+        player.TrunBlock(isBlocksSlect,blockWorld,dt);
 
         //地形の描画
         shader.setInt("texture1",0);
