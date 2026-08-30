@@ -82,6 +82,7 @@ void Camera::ProcessMouseScroll(float yoffset){
         Zoom = 45.0f;
 }
 
+//<summary>カメラベクトルのアップデート </summary>
 void Camera::updateCameraVectors()
 {
     // calculate the new Front vector
@@ -108,6 +109,8 @@ glm::vec3 Camera::CalculateOffset() const
     );
 }
 
+//<summary>カメラの方向ベクトル(Front, Right, Up)の更新 </summary>
+//<param name="offset"> オフセット</param>
 // --- ヘルパー関数: カメラの方向ベクトル(Front, Right, Up)の更新 ---
 void Camera::UpdateCameraVectors(const glm::vec3& offset)
 {

@@ -46,8 +46,8 @@ bool BlockWorld::DeleteBlockSelected(const glm::vec3& Pos) {
     {
         if (SnapToGrid(it->position) == cellPos)
         {
-            // Cubeが保持している三角形インデックスのみを削除
-            if (!collisionMesh.removeCubeByIndices(it->cube->GetTriangleIndices()))
+            // Cube ID で三角形を削除（最も確実な方法）
+            if (!collisionMesh.removeCubeById(it->cube->GetCubeId()))
                 return false;
             blocks.erase(it);
             return true;

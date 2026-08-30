@@ -1,6 +1,11 @@
 #include "Cube.h"
 #include "../Shader.h"
+
+// 静的メンバ初期化
+uint32_t Cube::nextCubeId = 1;
+
 Cube::Cube(float input_size)
+    : cubeId(nextCubeId++)
 {
    CubeInit(input_size);
 }
@@ -161,15 +166,14 @@ void Cube::RegisterCollisionAndStoreIndices(CollisionMesh& collision)
         worldPositions.push_back(glm::vec3(model * glm::vec4(p, 1.0f)));
     }
 
-    // indicesを3つずつ読んで三角形として登録し、インデックスを記録
-    triangleIndices.clear();
+    // indicesを3つずつ読んで三角形として登録し、Cube IDを付与
     for (size_t i = 0; i + 2 < localPositions.size(); i += 3) {
-        size_t idx = collision.addTriangleGetIndex(
+        collision.addTriangleWithCubeId(
             worldPositions[i],
             worldPositions[i+1],
             worldPositions[i+2],
-            normals[i]
+            normals[i],
+            cubeId  // このCubeの一意なID
         );
-        triangleIndices.push_back(idx);
     }
 }

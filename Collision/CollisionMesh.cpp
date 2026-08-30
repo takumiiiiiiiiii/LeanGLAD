@@ -3,34 +3,27 @@
 #include <iostream>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp> // glm::to_string用
-    //メッシュの座標と法線ベクトルをまとめる
     void CollisionMesh::addTriangle(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2) {
         glm::vec3 n = glm::normalize(glm::cross(v1 - v0, v2 - v0));
-        triangles.push_back({v0, v1, v2, n});
+        triangles.push_back({Triangle{v0, v1, v2, n}, 0});  // cubeId = 0（使用されない）
     }
     void CollisionMesh::addTriangle(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2 ,const glm::vec3& n) {
-        triangles.push_back({v0, v1, v2, n});
+        triangles.push_back({Triangle{v0, v1, v2, n}, 0});  // cubeId = 0（使用されない）
     }
-    size_t CollisionMesh::addTriangleGetIndex(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& n) {
-        size_t index = triangles.size();
-        triangles.push_back({v0, v1, v2, n});
-        return index;
+    void CollisionMesh::addTriangleWithCubeId(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& n, uint32_t cubeId) {
+        triangles.push_back({Triangle{v0, v1, v2, n}, cubeId});
     }
-    bool CollisionMesh::removeCubeByIndices(const std::vector<size_t>& indices) {
-        if (indices.empty()) return false;
+    bool CollisionMesh::removeCubeById(uint32_t cubeId) {
+        if (cubeId == 0) return false;  // ID 0は無効
 
-        // インデックスをソート（逆順削除用）
-        std::vector<size_t> sortedIndices = indices;
-        std::sort(sortedIndices.rbegin(), sortedIndices.rend()); // 降順ソート
+        const auto oldSize = triangles.size();
+        triangles.erase(
+            std::remove_if(triangles.begin(), triangles.end(), [cubeId](const TriangleWithCubeId& tri) {
+                return tri.cubeId == cubeId;
+            }),
+            triangles.end());
 
-        bool removed = false;
-        for (size_t idx : sortedIndices) {
-            if (idx < triangles.size()) {
-                triangles.erase(triangles.begin() + idx);
-                removed = true;
-            }
-        }
-        return removed;
+        return triangles.size() != oldSize;
     }
     bool CollisionMesh::removeCube(const glm::vec3& center, float size) {
         const float halfSize = size * 0.5f;
@@ -46,7 +39,8 @@
 
         const auto oldSize = triangles.size();
         triangles.erase(
-            std::remove_if(triangles.begin(), triangles.end(), [&](const Triangle& triangle) {
+            std::remove_if(triangles.begin(), triangles.end(), [&](const TriangleWithCubeId& triWithId) {
+                const auto& triangle = triWithId.triangle;
                 return isInsideCube(triangle.v0) &&
                        isInsideCube(triangle.v1) &&
                        isInsideCube(triangle.v2);
@@ -59,11 +53,11 @@
     bool CollisionMesh::raycast(const glm::vec3& origin, const glm::vec3& dir, float& outDist, glm::vec3& outNormal) const {
         float closest = std::numeric_limits<float>::max();
         bool hit = false;
-        for (const auto& tri : triangles) {
+        for (const auto& triWithId : triangles) {
             float t;
-            if (intersectRayTriangle(origin, dir, tri, t) && t < closest) {
+            if (intersectRayTriangle(origin, dir, triWithId.triangle, t) && t < closest) {
                 closest = t;
-                outNormal = tri.normal;
+                outNormal = triWithId.triangle.normal;
                 hit = true;
             }
         }
@@ -74,11 +68,11 @@
     void CollisionMesh::prindDebug()const{
         // std::cout << "=== CollisionMesh: " << triangles.size() << " triangles ===\n";
         for (size_t i = 0; i < triangles.size(); ++i) {
-            const Triangle& tri = triangles[i];
-            // std::cout << "[" << i << "] "
-            // << "v0=" << glm::to_string(tri.v0) << " "
-            //      << "v1=" << glm::to_string(tri.v1) << " "
-            // << "v2=" << glm::to_string(tri.v2) << " "
-            // << "normal=" << glm::to_string(tri.normal) << "\n";
+            const auto& triWithId = triangles[i];
+            // std::cout << "[" << i << "] cubeId=" << triWithId.cubeId
+            // << " v0=" << glm::to_string(triWithId.triangle.v0) << " "
+            //      << "v1=" << glm::to_string(triWithId.triangle.v1) << " "
+            // << "v2=" << glm::to_string(triWithId.triangle.v2) << " "
+            // << "normal=" << glm::to_string(triWithId.triangle.normal) << "\n";
         }
     }

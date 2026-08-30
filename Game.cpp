@@ -209,21 +209,18 @@ void Game::UpdatePlaying(float dt){
         // Playerの設定
         // shader.setInt("texture1",1);//プレイヤーのテクスチャ
         if(isBlocksSlect){
-            glm::vec3 forward = camera.Front;
-            forward.y = 0.0f;
-            forward = glm::normalize(forward);
             glm::vec3 ringt = camera.Right;
-            ringt.y = 0.0f;
+
             ringt = glm::normalize(ringt);
             glm::vec3 movement(0.0f);
             if (Input::IsKeyJustPressed(GLFW_KEY_W))
             {
-                movement += forward;
+                movement.y++;
             }
 
             if (Input::IsKeyJustPressed(GLFW_KEY_S))
             {
-                movement -= forward;
+                movement.y--;
             }
 
             if (Input::IsKeyJustPressed(GLFW_KEY_A))
@@ -235,8 +232,6 @@ void Game::UpdatePlaying(float dt){
             {
                 movement += ringt;
             }
-            // 水平方向のみに制限
-            movement.y = 0.0f;
             //プレイヤーの移動方向の座標
             glm::vec3 movePos=blockWorld.SnapToGrid(selectCube+movement*blockWorld.Getcubesize());
             //移動方向にブロックがあるか
@@ -252,7 +247,6 @@ void Game::UpdatePlaying(float dt){
             //自分以外のブロックに移動していた場合
             if(isBlocksSlectPrev&&player.GetPosition()!=selectCube){
                 blockWorld.DeleteBlockSelected(selectCube);
-                // std::cout <<<<std::endl;
                 blockWorld.PlaceBlock(player.GetPosition());
                 player.SetPosition(selectCube); 
             }

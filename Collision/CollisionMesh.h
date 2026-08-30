@@ -8,17 +8,22 @@ public:
     //メッシュの座標と法線ベクトルをまとめる
     void addTriangle(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2);
     void addTriangle(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2 ,const glm::vec3& n);
-    // インデックスを返す版(Cube用)
-    size_t addTriangleGetIndex(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& n);
+    // Cube ID付き三角形追加(新しい方法)
+    void addTriangleWithCubeId(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& n, uint32_t cubeId);
     bool removeCube(const glm::vec3& center, float size);
-    // 指定したインデックスの三角形のみ削除
-    bool removeCubeByIndices(const std::vector<size_t>& indices);
+    // Cube IDで三角形を削除(最も確実な方法)
+    bool removeCubeById(uint32_t cubeId);
     //地面と交差しているかを判定
     bool raycast(const glm::vec3& origin, const glm::vec3& dir, float& outDist, glm::vec3& outNormal) const;
     //保持している三角形一覧を取得(参照なのでコピーは発生しない)
-    const std::vector<Triangle>& getTriangles() const { return triangles; }
+    // 注: 現在は未使用（デバッグ用に残している）
+    // const std::vector<Triangle>& getTriangles() const;
 
     void prindDebug() const;
 private:
-    std::vector<Triangle> triangles;
+    struct TriangleWithCubeId {
+        Triangle triangle;
+        uint32_t cubeId;  // どのCubeに属するか
+    };
+    std::vector<TriangleWithCubeId> triangles;
 };
