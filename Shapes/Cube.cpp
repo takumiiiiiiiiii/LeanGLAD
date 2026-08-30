@@ -149,3 +149,27 @@ void Cube::RegisterCollision(CollisionMesh& collision) const
         );
     }
 }
+
+void Cube::RegisterCollisionAndStoreIndices(CollisionMesh& collision)
+{
+    glm::mat4 model = transform.GetModelMatrix();
+
+    // ローカル座標をワールド座標へ変換
+    std::vector<glm::vec3> worldPositions;
+    worldPositions.reserve(localPositions.size());
+    for (const auto& p : localPositions) {
+        worldPositions.push_back(glm::vec3(model * glm::vec4(p, 1.0f)));
+    }
+
+    // indicesを3つずつ読んで三角形として登録し、インデックスを記録
+    triangleIndices.clear();
+    for (size_t i = 0; i + 2 < localPositions.size(); i += 3) {
+        size_t idx = collision.addTriangleGetIndex(
+            worldPositions[i],
+            worldPositions[i+1],
+            worldPositions[i+2],
+            normals[i]
+        );
+        triangleIndices.push_back(idx);
+    }
+}

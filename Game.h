@@ -21,6 +21,8 @@ enum class GameState
 class Game{
     public:
     bool isBlocksSlect=false;
+    bool isBlocksSlectPrev = false;
+    glm::vec3 selectCube;
     GameState state;
     Player player;
     Plane plane;

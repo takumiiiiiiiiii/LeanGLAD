@@ -131,6 +131,37 @@ void Game::UpdatePlaying(float dt){
             }
 
         }
+        if (Input::IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_RIGHT)){
+            double mx, my;
+            Input::GetMousePosition(mx, my);
+
+            glm::vec3 rayOrigin, rayDir;
+            //クリック位置のワールド座標取得
+            screenPosToWorldRay(mx, my, SCR_WIDTH, SCR_HEIGHT, view,projection, rayOrigin,rayDir);
+             float dist;
+            glm::vec3 normal;
+            if (collisionmesh.raycast(rayOrigin, rayDir, dist, normal))
+            {
+                // glm::vec3 hitPos = rayOrigin + rayDir * dist;
+                // std::cout <<"hitPos"<<hitPos.x <<":";
+                // std::cout           <<hitPos.y <<":";
+                // std::cout           <<hitPos.z << std::endl;
+                std::cout << "rayOrigin.y=" << rayOrigin.y
+                        << " dist=" << dist
+                        << " normal=(" << normal.x << "," << normal.y << "," << normal.z << ")"
+                        << std::endl;
+
+                glm::vec3 hitPos = rayOrigin + rayDir * dist;
+                std::cout << "hitPos.y=" << hitPos.y << std::endl;
+                // ヒット面の法線方向にキューブ半径(0.5)分ずらす
+                // → Planeの上面をクリックすれば真上に、既存キューブの側面をクリックすればその横に置ける
+                // PlaceObject(hitPos); // ここで実際にオブジェクトを生成・配置する
+                // 表面上の座標はセル境界になるため、少し内側へ戻して対象セルを求める
+                const glm::vec3 deletePos = hitPos - normal * 0.001f;
+                std::cout << "delete result="
+                          << blockWorld.DeleteBlockSelected(deletePos) << std::endl;
+            }
+        }
         if(Input::IsKeyPressed(GLFW_KEY_Z)){
             blockWorld.SaveToFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates.txt","blocks");
         }
@@ -138,6 +169,10 @@ void Game::UpdatePlaying(float dt){
             blockWorld.LoadCubeStateFromFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates.txt");
         }
         if(Input::IsKeyJustPressed(GLFW_KEY_B)){
+            //ブロックセレクトに入った時
+            if(!isBlocksSlectPrev){
+                selectCube = player.GetPosition();
+            }
             isBlocksSlect = !isBlocksSlect;
         }
 
@@ -167,21 +202,64 @@ void Game::UpdatePlaying(float dt){
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D,texture2);
         
-        //カメラ関連
-        camera.Follow(player.GetPosition(),dt);
-        camera.FollowRotate(player.GetPosition(), 100.0,dt);
-        projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        view = camera.GetViewMatrix();
-        
-        shader.setMat4("projection", projection);
-        shader.setMat4("view",view);
+
+
         //シェーダーに反映ture,mix);
 
         // Playerの設定
-        shader.setInt("texture1",1);//プレイヤーのテクスチャ
+        // shader.setInt("texture1",1);//プレイヤーのテクスチャ
         if(isBlocksSlect){
+            glm::vec3 forward = camera.Front;
+            forward.y = 0.0f;
+            forward = glm::normalize(forward);
+            glm::vec3 ringt = camera.Right;
+            ringt.y = 0.0f;
+            ringt = glm::normalize(ringt);
+            glm::vec3 movement(0.0f);
+            if (Input::IsKeyJustPressed(GLFW_KEY_W))
+            {
+                movement += forward;
+            }
+
+            if (Input::IsKeyJustPressed(GLFW_KEY_S))
+            {
+                movement -= forward;
+            }
+
+            if (Input::IsKeyJustPressed(GLFW_KEY_A))
+            {
+                movement -= ringt;
+            }
+
+            if (Input::IsKeyJustPressed(GLFW_KEY_D))
+            {
+                movement += ringt;
+            }
+            // 水平方向のみに制限
+            movement.y = 0.0f;
+            //プレイヤーの移動方向の座標
+            glm::vec3 movePos=blockWorld.SnapToGrid(selectCube+movement*blockWorld.Getcubesize());
+            //移動方向にブロックがあるか
+            if(blockWorld.CheckBlockSelectedPos(movePos)||blockWorld.SnapToGrid(player.GetPosition())==movePos){
+                selectCube = movePos;
+
+            }
+            camera.Follow(selectCube,dt);
+            camera.FollowRotate(selectCube, 100.0,dt);
+            isBlocksSlectPrev = true;
 
         }else{
+            //自分以外のブロックに移動していた場合
+            if(isBlocksSlectPrev&&player.GetPosition()!=selectCube){
+                blockWorld.DeleteBlockSelected(selectCube);
+                // std::cout <<<<std::endl;
+                blockWorld.PlaceBlock(player.GetPosition());
+                player.SetPosition(selectCube); 
+            }
+            isBlocksSlectPrev = false;
+            //カメラ関連
+            camera.Follow(player.GetPosition(),dt);
+            camera.FollowRotate(player.GetPosition(), 100.0,dt);
             player.MoveWithCameraOrientation(camera,dt);
             player.Update(dt);
         }
@@ -192,10 +270,12 @@ void Game::UpdatePlaying(float dt){
         shader.setInt("texture1",0);
         plane.Draw(shader);
         blockWorld.DrawAll(shader);
-        // glm::mat4 trans = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-        // trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-        // trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
 
+        //カメラ反映
+        projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        view = camera.GetViewMatrix();
+        shader.setMat4("projection", projection);
+        shader.setMat4("view",view);
         // unsigned int transformLoc = glGetUniformLocation(shader.ID,"transform");
         // glUniformMatrix4fv(transformLoc,1,GL_FALSE,glm::value_ptr(trans));
 

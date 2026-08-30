@@ -30,12 +30,13 @@ public:
     glm::vec3 SnapToGrid(const glm::vec3& worldPos)const;
     //選択した座標にブロックが存在するか
     bool CheckBlockSelectedPos(const glm::vec3& Pos)const;
-    //
+
     bool GetBlockPosition(const glm::vec3& pos,glm::vec3& blockPosition)const;
+    //座標のブロックを削除
     bool DeleteBlockSelected(const glm::vec3& Pos);
 
     bool SaveToFile(const std::string& filepath,const std::string& filename) const;
-
+    float Getcubesize() {return cubeSize;};
 
     glm::vec3 parseLine (const std::string& line, std::size_t lineNumber) const;
     std::vector<glm::vec3> readCoordinatesFromFile(const std::string& filepath) const;

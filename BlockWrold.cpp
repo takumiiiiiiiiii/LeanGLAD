@@ -46,6 +46,9 @@ bool BlockWorld::DeleteBlockSelected(const glm::vec3& Pos) {
     {
         if (SnapToGrid(it->position) == cellPos)
         {
+            // Cubeが保持している三角形インデックスのみを削除
+            if (!collisionMesh.removeCubeByIndices(it->cube->GetTriangleIndices()))
+                return false;
             blocks.erase(it);
             return true;
         }
@@ -83,7 +86,8 @@ void BlockWorld::PlaceBlock(const glm::vec3& worldPos)
     cube->SetTranformPosition(snapped);
 
     // 新しく置いたキューブも次のRaycastの対象にする(これがないと2段目を積めない)
-    cube->RegisterCollision(collisionMesh);
+    // インデックスを記録して、削除時に正確に削除できるようにする
+    cube->RegisterCollisionAndStoreIndices(collisionMesh);
 
     blocks.push_back(PlacedBlock{ snapped, std::move(cube) });
 }
@@ -135,6 +139,7 @@ bool BlockWorld::SaveToFile(const std::string& filepath,const std::string& filen
     // }
     // file.close();
     // return true;
+    return true;
 }
 
 // 1行分の "x,y,z" 文字列をパースする
@@ -219,12 +224,14 @@ bool BlockWorld::LoadCubeStateFromFile(const std::string& filepath){
             cube->SetTranformPosition(file_data[j]);
 
             // 新しく置いたキューブも次のRaycastの対象にする(これがないと2段目を積めない)
-            cube->RegisterCollision(collisionMesh);
+            // インデックスを記録して、削除時に正確に削除できるようにする
+            cube->RegisterCollisionAndStoreIndices(collisionMesh);
 
             blocks.push_back(PlacedBlock{file_data[j], std::move(cube) });
         }
         std::cout << "\n";
     }
+    return true;
 }
 
 void BlockWorld::DrawAll(Shader& shader)
