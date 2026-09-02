@@ -63,29 +63,10 @@ void Player::MoveWithCameraOrientation(Camera& camera, float deltaTime)
 
     glm::vec3 movement(0.0f);
 
-    if (Input::IsKeyPressed(GLFW_KEY_W))
-    {
-        std::cout << "Press W" << std::endl;
-        movement += forward;
-    }
+    std::cout << "Press W" << std::endl;
+    movement += forward*Input::GetMoveInput().y;
+    movement += ringt*Input::GetMoveInput().x;
 
-    if (Input::IsKeyPressed(GLFW_KEY_S))
-    {
-        std::cout << "Press S" << std::endl;
-        movement -= forward;
-    }
-
-    if (Input::IsKeyPressed(GLFW_KEY_A))
-    {
-        std::cout << "Press A" << std::endl;
-        movement -= ringt;
-    }
-
-    if (Input::IsKeyPressed(GLFW_KEY_D))
-    {
-        std::cout << "Press D" << std::endl;
-        movement += ringt;
-    }
     // 水平方向のみに制限
     movement.y = 0.0f;
 
@@ -100,16 +81,19 @@ void Player::MoveWithCameraOrientation(Camera& camera, float deltaTime)
 //ジャンプ
 void Player::Jump()
 {
-    
-    if(Input::IsKeyPressed(GLFW_KEY_SPACE)){
-        //std::cout << isGrounded << isJump <<std::endl;
-        if (!isJumpimg) {
-            kinematics.velocity.y = jumpForce;
+    GroundHitInfo ground = CheckGroundCube();
 
-        }
+    if (Input::IsJumpJustPressed() && ground.grounded)
+    {
+        kinematics.velocity.y = jumpForce;
         isJumpimg = true;
+        return;
     }
 
+    if (ground.grounded && kinematics.velocity.y <= 0.0f)
+    {
+        isJumpimg = false;
+    }
 }
 void Player::TrunBlock(bool isBlock,BlockWorld& blockWorld,float deltaTime){
 

@@ -141,53 +141,47 @@ void Camera::Follow(const glm::vec3& target, float dt)
 // --- メイン処理: 回転入力と追従 ---
 void Camera::FollowRotate(const glm::vec3& target, float rotateSpeed, float dt)
 {
-    // 1. 回転入力の処理
+    float yawInput = 0.0f;
+    float pitchInput = 0.0f;
+
     if (Input::IsKeyPressed(GLFW_KEY_LEFT))
     {
-        Yaw += rotateSpeed * dt;
+        yawInput += 1.0f;
     }
     if (Input::IsKeyPressed(GLFW_KEY_RIGHT))
     {
-        Yaw -= rotateSpeed * dt;
+        yawInput -= 1.0f;
     }
-    if(Input::IsKeyPressed(GLFW_KEY_UP)){
-        Pitch -= rotateSpeed * dt;
+    if (Input::IsKeyPressed(GLFW_KEY_UP))
+    {
+        pitchInput -= 1.0f;
     }
-    if(Input::IsKeyPressed(GLFW_KEY_DOWN)){
-        Pitch += rotateSpeed * dt;
+    if (Input::IsKeyPressed(GLFW_KEY_DOWN))
+    {
+        pitchInput += 1.0f;
     }
+
+    StickInput rightStick = Input::GetRightStickInput();
+    if (std::abs(rightStick.x) > 0.15f || std::abs(rightStick.y) > 0.15f)
+    {
+        yawInput = -rightStick.x;
+        pitchInput = -rightStick.y;
+    }
+
+    Yaw += yawInput * rotateSpeed * dt;
+    Pitch += pitchInput * rotateSpeed * dt;
     Pitch = glm::clamp(Pitch, -80.0f, 80.0f);
-    // 2. 初回フレームのみ、smoothedTarget を実際のターゲット位置で初期化
+
     if (!isInitialized)
     {
         smoothedTarget = target;
         isInitialized = true;
     }
 
-    // 3. 移動による遅れの計算（ターゲットの位置だけを滑らかに追従させる）
-    // ※これにより「移動のオフセット成分」が smoothedTarget に保持されます
     float alpha = 1.0f - std::exp(-10.0f * dt);
     smoothedTarget = glm::mix(smoothedTarget, target, alpha);
 
-    // 4. 現在の Yaw から最新のカメラオフセットベクトルを計算
     glm::vec3 desiredOffset = CalculateOffset();
-
-    // 5. 【重要】「実際のターゲット」ではなく「遅れた仮想ターゲット」を中心にカメラを配置
     Position = smoothedTarget + desiredOffset;
-
-    // 6. 注視点（smoothedTarget）を正しく向くように Front ベクトルを設定
-    // （desiredOffset の逆方向を向くため、中心ブレが一切起きません）
     UpdateCameraVectors(desiredOffset);
-    // // 回転入力の処理
-    // if (Input::IsKeyPressed(GLFW_KEY_LEFT))
-    // {
-    //     Yaw -= rotateSpeed * dt;
-    // }
-    // if (Input::IsKeyPressed(GLFW_KEY_RIGHT))
-    // {
-    //     Yaw += rotateSpeed * dt;
-    // }
-
-    // // 常にターゲットを追従させる場合（回転していなくても追従を実行する）
-    // Follow(target, dt);
 }

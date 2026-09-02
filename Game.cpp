@@ -37,10 +37,10 @@ void Game::Initialize()
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
     //stbによるテクスチャ画像読み込み
     int width,height,nrChannles;
-    unsigned char*data = stbi_load("../Textures/wall.jpg",&width,&height,&nrChannles,0);
+    unsigned char*data = stbi_load("../Textures/NormalBox.png",&width,&height,&nrChannles,0);
     if(data)
     {
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,width,height,0,GL_RGB,GL_UNSIGNED_BYTE,data);
+        glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,data);
         glGenerateMipmap(GL_TEXTURE_2D);
     }else{
         std::cout<<"Failed to load texture"<< std::endl;
@@ -94,6 +94,12 @@ void Game::Update(float dt){
 
     case GameState::Result:
         break;
+    }
+}
+
+void Game::UpdateTitle(float dt){
+    if(Input::IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_LEFT)){
+       
     }
 }
 
@@ -168,7 +174,8 @@ void Game::UpdatePlaying(float dt){
         if(Input::IsKeyPressed(GLFW_KEY_X)){
             blockWorld.LoadCubeStateFromFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates.txt");
         }
-        if(Input::IsKeyJustPressed(GLFW_KEY_B)){
+        if(Input::IsBecomeBlockJustPressed()){
+            
             //ブロックセレクトに入った時
             if(!isBlocksSlectPrev){
                 selectCube = player.GetPosition();
@@ -209,29 +216,12 @@ void Game::UpdatePlaying(float dt){
         // Playerの設定
         // shader.setInt("texture1",1);//プレイヤーのテクスチャ
         if(isBlocksSlect){
-            glm::vec3 ringt = camera.Right;
-
-            ringt = glm::normalize(ringt);
+            glm::vec3 right = camera.Right;
+            glm::vec3 up = camera.Up;
+            right = glm::normalize(right);
             glm::vec3 movement(0.0f);
-            if (Input::IsKeyJustPressed(GLFW_KEY_W))
-            {
-                movement.y++;
-            }
-
-            if (Input::IsKeyJustPressed(GLFW_KEY_S))
-            {
-                movement.y--;
-            }
-
-            if (Input::IsKeyJustPressed(GLFW_KEY_A))
-            {
-                movement -= ringt;
-            }
-
-            if (Input::IsKeyJustPressed(GLFW_KEY_D))
-            {
-                movement += ringt;
-            }
+            movement += up*Input::GetJustMoveInput().y;
+            movement += right*Input::GetJustMoveInput().x;
             //プレイヤーの移動方向の座標
             glm::vec3 movePos=blockWorld.SnapToGrid(selectCube+movement*blockWorld.Getcubesize());
             //移動方向にブロックがあるか
