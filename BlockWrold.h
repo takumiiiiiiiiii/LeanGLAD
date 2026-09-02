@@ -3,17 +3,21 @@
 #include <memory>
 #include <glm/glm.hpp>
 #include "Shapes/Cube.h"
+#include "Shapes/Plane.h"
 #include "Collision/CollisionMesh.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
 class Shader;
+class Object;
 
-// 配置済みブロック1個分の情報(位置とCubeの実体をまとめて保持)
+// 配置済みブロック1個分の情報(位置、種類、サイズ、Objectの実体をまとめて保持)
 struct PlacedBlock
 {
     glm::vec3 position;
-    std::unique_ptr<Cube> cube;
+    std::string objectType;  // "Cube", "Plane" など
+    float objectSize;        // オブジェクトのサイズ
+    std::unique_ptr<class Object> object;  // CubeやPlaneなどの基底クラス
 };
 
 class BlockWorld
@@ -40,6 +44,16 @@ public:
 
     glm::vec3 parseLine (const std::string& line, std::size_t lineNumber) const;
     std::vector<glm::vec3> readCoordinatesFromFile(const std::string& filepath) const;
+    
+    // 拡張フォーマット: "x,y,z,objectType,size" をパースする
+    struct ParsedBlockData {
+        glm::vec3 position;
+        std::string objectType;
+        float objectSize;
+    };
+    ParsedBlockData parseBlockLine(const std::string& line, std::size_t lineNumber) const;
+    std::vector<ParsedBlockData> readBlockDataFromFile(const std::string& filepath) const;
+    
     bool LoadCubeStateFromFile(const std::string& filepath);
 private:
     bool IsOccupied(const glm::vec3& worldPos) const;

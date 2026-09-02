@@ -25,7 +25,7 @@ class Game{
     glm::vec3 selectCube;
     GameState state;
     Player player;
-    Plane plane;
+
     Camera camera;
     Shader shader;
     BlockWorld blockWorld;

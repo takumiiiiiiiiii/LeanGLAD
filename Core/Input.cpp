@@ -231,7 +231,7 @@ StickInput Input::GetLeftStickInput()
 
 StickInput Input::GetLeftStickJustInput()
 {
-   const float deadzone = 0.48f;
+   const float deadzone = 0.68f;
 
     StickInput current = currentLeftStick;
     float currentLen = std::sqrt(current.x * current.x + current.y * current.y);

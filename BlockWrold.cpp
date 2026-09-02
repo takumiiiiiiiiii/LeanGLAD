@@ -1,4 +1,7 @@
 #include "BlockWrold.h"
+#include "Shapes/Cube.h"
+#include "Shapes/Plane.h"
+#include "Entity/Object.h"
 
 BlockWorld::BlockWorld(CollisionMesh& collisionMesh, float cubeSize)
     : collisionMesh(collisionMesh), cubeSize(cubeSize)
@@ -19,6 +22,9 @@ bool BlockWorld::CheckBlockSelectedPos(const glm::vec3& Pos)const{
     glm::vec3 inputcellPos = SnapToGrid(Pos);
     glm::vec3 blockCellPos;
     for(const auto& block:blocks){
+        if(block.objectType != "Cube"){
+            continue;
+        }
         blockCellPos = SnapToGrid(block.position);
         if(blockCellPos == inputcellPos){
             return true;
@@ -46,9 +52,17 @@ bool BlockWorld::DeleteBlockSelected(const glm::vec3& Pos) {
     {
         if (SnapToGrid(it->position) == cellPos)
         {
-            // Cube ID で三角形を削除（最も確実な方法）
-            if (!collisionMesh.removeCubeById(it->cube->GetCubeId()))
-                return false;
+            // Cubeの場合のみCube IDで三角形を削除
+            if (it->objectType == "Cube") {
+                if (auto* cubePtr = dynamic_cast<Cube*>(it->object.get())) {
+                    if (!collisionMesh.removeCubeById(cubePtr->GetCubeId())) {
+                        std::cerr << "警告: Cube ID による削除に失敗しました\n";
+                    }
+                }
+            }
+            // Planeの場合はここで必要に応じて対応可能
+            // TODO: Planeの衝突データ削除対応
+            
             blocks.erase(it);
             return true;
         }
@@ -89,7 +103,7 @@ void BlockWorld::PlaceBlock(const glm::vec3& worldPos)
     // インデックスを記録して、削除時に正確に削除できるようにする
     cube->RegisterCollisionAndStoreIndices(collisionMesh);
 
-    blocks.push_back(PlacedBlock{ snapped, std::move(cube) });
+    blocks.push_back(PlacedBlock{ snapped, "Cube", cubeSize, std::move(cube) });
 }
 
 bool BlockWorld::SaveToFile(const std::string& filepath,const std::string& filename) const
@@ -105,16 +119,15 @@ bool BlockWorld::SaveToFile(const std::string& filepath,const std::string& filen
  
         ofs << std::fixed << std::setprecision(6);
  
+        // 拡張フォーマット: x,y,z,objectType,size
         for (const auto& p : blocks)
         {
             ofs << p.position.x << ","
                 << p.position.y << ","
-                << p.position.z << "\n";
+                << p.position.z << ","
+                << p.objectType << ","
+                << std::fixed << std::setprecision(2) << p.objectSize << "\n";
         }
-        // ofs << "fa" << " "
-        //         << "fa" << " "
-        //         << "fa" << " "
-        //         << "fa" << " ";
  
         ofs.close();
         std::cout << "書き込み成功: " << filepath << " (" << blocks.size() << " 件)\n";
@@ -129,16 +142,6 @@ bool BlockWorld::SaveToFile(const std::string& filepath,const std::string& filen
         std::cerr << "予期しないエラー: " << e.what() << "\n";
         throw;
     }
-    // std::ofstream file(filename);
-    // for (const auto& p : blocks)
-    // {
-    //     file << p.position.x << " "
-    //         << p.position.y << " "
-    //         << p.position.z << " "
-    //         << p.cube << " ";
-    // }
-    // file.close();
-    // return true;
     return true;
 }
 
@@ -180,6 +183,62 @@ glm::vec3 BlockWorld::parseLine(const std::string& line, std::size_t lineNumber)
     return glm::vec3{ values[0], values[1], values[2] };
 }
 
+// 拡張フォーマット: "x,y,z,objectType,size" をパースする
+BlockWorld::ParsedBlockData BlockWorld::parseBlockLine(const std::string& line, std::size_t lineNumber) const{
+    std::stringstream ss(line);
+    std::string token;
+    std::vector<std::string> tokens;
+ 
+    while (std::getline(ss, token, ',')) {
+        // 前後の空白を削除
+        token.erase(0, token.find_first_not_of(" \t"));
+        token.erase(token.find_last_not_of(" \t") + 1);
+        tokens.push_back(token);
+    }
+ 
+    if (tokens.size() != 5) {
+        throw std::runtime_error(
+            "列数が不正です (行 " + std::to_string(lineNumber) +
+            ", 期待値: 5 (x,y,z,objectType,size), 実際: " + std::to_string(tokens.size()) + ")");
+    }
+ 
+    try {
+        // x, y, z をパース
+        std::size_t pos;
+        float x = std::stof(tokens[0], &pos);
+        if (pos != tokens[0].size()) {
+            throw std::invalid_argument("余分な文字が含まれています");
+        }
+        float y = std::stof(tokens[1], &pos);
+        if (pos != tokens[1].size()) {
+            throw std::invalid_argument("余分な文字が含まれています");
+        }
+        float z = std::stof(tokens[2], &pos);
+        if (pos != tokens[2].size()) {
+            throw std::invalid_argument("余分な文字が含まれています");
+        }
+        
+        // objectType（文字列）
+        std::string objectType = tokens[3];
+        
+        // size をパース
+        float size = std::stof(tokens[4], &pos);
+        if (pos != tokens[4].size()) {
+            throw std::invalid_argument("余分な文字が含まれています");
+        }
+        
+        return ParsedBlockData{ glm::vec3{x, y, z}, objectType, size };
+    }
+    catch (const std::invalid_argument& e) {
+        throw std::runtime_error(
+            "数値として解釈できません (行 " + std::to_string(lineNumber) + ": " + std::string(e.what()) + ")");
+    }
+    catch (const std::out_of_range& e) {
+        throw std::runtime_error(
+            "値が範囲を超えています (行 " + std::to_string(lineNumber) + ")");
+    }
+}
+
 //ファイルを読み込んで座標を読み込む
 std::vector<glm::vec3> BlockWorld::readCoordinatesFromFile(const std::string& filepath)const {
     std::ifstream ifs(filepath);
@@ -209,35 +268,93 @@ std::vector<glm::vec3> BlockWorld::readCoordinatesFromFile(const std::string& fi
     return points;
 }
 
+// 拡張フォーマット "x,y,z,objectType,size" をファイルから読み込む
+std::vector<BlockWorld::ParsedBlockData> BlockWorld::readBlockDataFromFile(const std::string& filepath) const {
+    std::ifstream ifs(filepath);
+    if (!ifs.is_open()) {
+        throw std::runtime_error(
+            "ファイルを開けません: " + filepath + " (" + std::strerror(errno) + ")");
+    }
+ 
+    std::vector<ParsedBlockData> blockData;
+    std::string line;
+    std::size_t lineNumber = 0;
+ 
+    while (std::getline(ifs, line)) {
+        ++lineNumber;
+        if (line.empty()) continue; // 空行はスキップ
+ 
+        // 行単位でパースエラーを catch し、パースに失敗した場合はワーニングを出して続行
+        try {
+            blockData.push_back(parseBlockLine(line, lineNumber));
+        }
+        catch (const std::exception& e) {
+            std::cerr << "警告: " << e.what() << "\n";
+            // パースエラーの場合もデータを追加しないで続行
+        }
+    }
+ 
+    if (ifs.bad()) {
+        throw std::runtime_error("読み込み中にエラーが発生しました: " + filepath);
+    }
+ 
+    return blockData;
+}
+
 bool BlockWorld::LoadCubeStateFromFile(const std::string& filepath){
     
-    std::vector<glm::vec3> file_data;
-    file_data = std::move(readCoordinatesFromFile(filepath));
-    glm::vec3 p;
-    for (size_t i = 0; i < file_data.size(); i += 3) {
-        // 残り要素数に応じて、今回の範囲の終わりを取得
-        size_t end = std::min(i + 3, file_data.size());
-
-        std::cout << "グループ: ";
-        for (size_t j = i; j < end; ++j) {
-            auto cube = std::make_unique<Cube>(cubeSize);
-            cube->SetTranformPosition(file_data[j]);
-
-            // 新しく置いたキューブも次のRaycastの対象にする(これがないと2段目を積めない)
-            // インデックスを記録して、削除時に正確に削除できるようにする
-            cube->RegisterCollisionAndStoreIndices(collisionMesh);
-
-            blocks.push_back(PlacedBlock{file_data[j], std::move(cube) });
+    try {
+        // 拡張フォーマットを読み込む
+        std::vector<ParsedBlockData> blockDataList = readBlockDataFromFile(filepath);
+        
+        std::cout << "読み込み成功: " << blockDataList.size() << " 個のオブジェクト\n";
+        
+        for (const auto& blockData : blockDataList) {
+            std::unique_ptr<Object> newObject;
+            
+            // objectTypeに基づいて適切なオブジェクトを生成
+            if (blockData.objectType == "Cube") {
+                auto cube = std::make_unique<Cube>(blockData.objectSize);
+                cube->SetTranformPosition(blockData.position);
+                cube->RegisterCollisionAndStoreIndices(collisionMesh);
+                newObject = std::move(cube);
+                std::cout << "  Cube配置: " << blockData.position.x << ", "
+                          << blockData.position.y << ", " << blockData.position.z
+                          << " (サイズ: " << blockData.objectSize << ")\n";
+            }
+            else if (blockData.objectType == "Plane") {
+                auto plane = std::make_unique<Plane>(blockData.objectSize);
+                plane->GetTransform().SetPosition(blockData.position);
+                plane->RegisterCollision(collisionMesh);
+                newObject = std::move(plane);
+                std::cout << "  Plane配置: " << blockData.position.x << ", "
+                          << blockData.position.y << ", " << blockData.position.z
+                          << " (サイズ: " << blockData.objectSize << ")\n";
+            }
+            else {
+                std::cerr << "警告: 未対応のオブジェクト種類です: " << blockData.objectType << "\n";
+                continue;
+            }
+            blocks.push_back(PlacedBlock{
+                blockData.position,
+                blockData.objectType,
+                blockData.objectSize,
+                std::move(newObject)
+            });
         }
-        std::cout << "\n";
+        
+        return true;
     }
-    return true;
+    catch (const std::exception& e) {
+        std::cerr << "ファイル読み込みエラー: " << e.what() << "\n";
+        return false;
+    }
 }
 
 void BlockWorld::DrawAll(Shader& shader)
 {
     for (auto& block : blocks)
     {
-        block.cube->Draw(shader);
+        block.object->Draw(shader);
     }
 }

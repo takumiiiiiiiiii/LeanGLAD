@@ -11,7 +11,7 @@
 Game::Game()
     : state(GameState::Playing),
       player(collisionmesh,Transform(), 0.8f),
-      plane(10.0f),
+
       blockWorld(collisionmesh,1.0),
     shader(
           "../Shaders/VertexShader.SHADER",
@@ -73,9 +73,8 @@ void Game::Initialize()
     //床初期化
     // plane.GetTransform().SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     //床のコリジョンを設定
-    plane.RegisterCollision(collisionmesh);
 
-    blockWorld.LoadCubeStateFromFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates.txt");
+    blockWorld.LoadCubeStateFromFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates_new.txt");
     
 }
 
@@ -216,18 +215,26 @@ void Game::UpdatePlaying(float dt){
         // Playerの設定
         // shader.setInt("texture1",1);//プレイヤーのテクスチャ
         if(isBlocksSlect){
+            glm::vec3 front = camera.Front;
+            front.y = 0;
             glm::vec3 right = camera.Right;
             glm::vec3 up = camera.Up;
             right = glm::normalize(right);
             glm::vec3 movement(0.0f);
-            movement += up*Input::GetJustMoveInput().y;
+            glm::vec3 isUpBlock = blockWorld.SnapToGrid(selectCube+up*blockWorld.Getcubesize());
+            glm::vec3 isDownBlock = blockWorld.SnapToGrid(selectCube-up*blockWorld.Getcubesize());
+            if(blockWorld.CheckBlockSelectedPos(isUpBlock)||blockWorld.CheckBlockSelectedPos(isDownBlock)){
+                movement += up*Input::GetJustMoveInput().y;
+            }else{
+                movement += front*Input::GetJustMoveInput().y;
+            }
+
             movement += right*Input::GetJustMoveInput().x;
             //プレイヤーの移動方向の座標
             glm::vec3 movePos=blockWorld.SnapToGrid(selectCube+movement*blockWorld.Getcubesize());
             //移動方向にブロックがあるか
             if(blockWorld.CheckBlockSelectedPos(movePos)||blockWorld.SnapToGrid(player.GetPosition())==movePos){
                 selectCube = movePos;
-
             }
             camera.Follow(selectCube,dt);
             camera.FollowRotate(selectCube, 100.0,dt);
@@ -252,7 +259,7 @@ void Game::UpdatePlaying(float dt){
 
         //地形の描画
         shader.setInt("texture1",0);
-        plane.Draw(shader);
+
         blockWorld.DrawAll(shader);
 
         //カメラ反映
