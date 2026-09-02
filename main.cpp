@@ -18,6 +18,9 @@
 #include "Entity/Transform.h"
 #include "Entity/Player.h"
 #include "Game.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 // ウィンドウサイズ変更時に呼ばれるコールバック関数（ウィンドウサイズが変わっても描画範囲を追従させる）
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -103,6 +106,9 @@ int main()
 
     Game game;
     game.Initialize();
+
+    // GLFWウィンドウ作成後
+
 
     // ウィンドウが閉じられる指示が出るまで、メインループを繰り返す
     while (!glfwWindowShouldClose(window))

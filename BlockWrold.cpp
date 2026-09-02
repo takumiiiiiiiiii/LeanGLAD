@@ -83,7 +83,7 @@ bool BlockWorld::IsOccupied(const glm::vec3& worldPos) const
     return false;
 }
 
-void BlockWorld::PlaceBlock(const glm::vec3& worldPos)
+void BlockWorld::PlaceBlock(const glm::vec3& worldPos, const std::string& objectType, float objectSize)
 {
     // セルインデックスをfloorで求め、そのセルの中心(index + 0.5)*cubeSizeにスナップする。
     // Cubeは中心基準(-0.5〜+0.5)なので、中心をセル境界の真ん中に合わせる必要がある。
@@ -96,14 +96,31 @@ void BlockWorld::PlaceBlock(const glm::vec3& worldPos)
     if (IsOccupied(snapped))
         return;
 
-    auto cube = std::make_unique<Cube>(cubeSize);
-    cube->SetTranformPosition(snapped);
+    std::unique_ptr<Object> newObject;
 
-    // 新しく置いたキューブも次のRaycastの対象にする(これがないと2段目を積めない)
-    // インデックスを記録して、削除時に正確に削除できるようにする
-    cube->RegisterCollisionAndStoreIndices(collisionMesh);
+    // objectTypeに基づいて適切なオブジェクトを生成
+    if (objectType == "Cube") {
+        auto cube = std::make_unique<Cube>(objectSize);
+        cube->SetTranformPosition(snapped);
+        cube->RegisterCollisionAndStoreIndices(collisionMesh);
+        newObject = std::move(cube);
+        std::cout << "Cube配置: (" << snapped.x << ", " << snapped.y << ", " << snapped.z 
+                  << ") サイズ: " << objectSize << "\n";
+    }
+    else if (objectType == "Plane") {
+        auto plane = std::make_unique<Plane>(objectSize);
+        plane->GetTransform().SetPosition(snapped);
+        plane->RegisterCollision(collisionMesh);
+        newObject = std::move(plane);
+        std::cout << "Plane配置: (" << snapped.x << ", " << snapped.y << ", " << snapped.z 
+                  << ") サイズ: " << objectSize << "\n";
+    }
+    else {
+        std::cerr << "警告: 未対応のオブジェクト種類です: " << objectType << "\n";
+        return;
+    }
 
-    blocks.push_back(PlacedBlock{ snapped, "Cube", cubeSize, std::move(cube) });
+    blocks.push_back(PlacedBlock{ snapped, objectType, objectSize, std::move(newObject) });
 }
 
 bool BlockWorld::SaveToFile(const std::string& filepath,const std::string& filename) const

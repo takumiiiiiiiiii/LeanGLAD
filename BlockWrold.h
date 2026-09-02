@@ -25,8 +25,11 @@ class BlockWorld
 public:
     explicit BlockWorld(CollisionMesh& collisionMesh, float cubeSize = 1.0f);
 
-    // worldPosにキューブ1個分の空きがあれば配置する
-    void PlaceBlock(const glm::vec3& worldPos);
+    // worldPosにオブジェクトを配置する（objectTypeとsizeで種類とサイズを指定）
+    // @param worldPos ワールド座標
+    // @param objectType オブジェクト種類（"Cube"、"Plane"など）
+    // @param objectSize オブジェクトのサイズ（デフォルト: 1.0f）
+    void PlaceBlock(const glm::vec3& worldPos, const std::string& objectType = "Cube", float objectSize = 1.0f);
 
     void DrawAll(Shader& shader);
 
