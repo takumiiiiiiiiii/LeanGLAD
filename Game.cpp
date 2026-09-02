@@ -223,9 +223,12 @@ void Game::UpdatePlaying(float dt){
             glm::vec3 up = camera.Up;
             right = glm::normalize(right);
             glm::vec3 movement(0.0f);
+            //ブロックの上か下にブロックがある場合は上下移動を優先する　
             glm::vec3 isUpBlock = blockWorld.SnapToGrid(selectCube+up*blockWorld.Getcubesize());
             glm::vec3 isDownBlock = blockWorld.SnapToGrid(selectCube-up*blockWorld.Getcubesize());
             if(blockWorld.CheckBlockSelectedPos(isUpBlock)||blockWorld.CheckBlockSelectedPos(isDownBlock)){
+                movement += up*Input::GetJustMoveInput().y;
+            }else if(player.GetPosition().y==isUpBlock.y||player.GetPosition().y==isDownBlock.y){
                 movement += up*Input::GetJustMoveInput().y;
             }else{
                 movement += front*Input::GetJustMoveInput().y;
