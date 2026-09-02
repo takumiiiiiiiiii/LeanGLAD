@@ -9,6 +9,9 @@
 #include "Collision/CollisionMesh.h"
 #include "Shapes/Cube.h"
 #include "BlockWrold.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 enum class GameState
 {
@@ -46,5 +49,6 @@ class Game{
     void Update(float dt);
     void UpdateTitle(float dt);
     void UpdatePlaying(float dt);
+    
     
 };

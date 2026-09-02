@@ -104,6 +104,14 @@ int main()
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glEnable(GL_DEPTH_TEST);
 
+    // ImGUIの初期化
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+
     Game game;
     game.Initialize();
 
@@ -113,6 +121,11 @@ int main()
     // ウィンドウが閉じられる指示が出るまで、メインループを繰り返す
     while (!glfwWindowShouldClose(window))
     {
+        // ImGUIの新しいフレームを開始
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
         // ★フレームの最初に必ずUpdateを呼び出す
         Input::Update();
         // エスケープキーなどの入力入力を監視・処理
@@ -124,6 +137,14 @@ int main()
         lastFrame = currentFrame;  
         //メインゲーム
         game.Update(deltaTime);
+
+        // ImGUIのレンダリング
+        ImGui::Render();
+        int display_w, display_h;
+        glfwGetFramebufferSize(window, &display_w, &display_h);
+        glViewport(0, 0, display_w, display_h);
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         // カラーバッファを入れ替えて、描画した内容を実際に画面に表示（ダブルバッファリング）
         glfwSwapBuffers(window);
         // キーボードやマウスの操作などのイベントを検知・処理
@@ -137,6 +158,11 @@ int main()
     // glDeleteBuffers(1, &EBO);
     // glDeleteVertexArrays(1, &VAO[1]);
     // glDeleteBuffers(1, &VBO[1]);
+
+    // ImGUIのシャットダウン
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
 
     // メインループ終了後、ウィンドウを破棄
     glfwDestroyWindow(window);

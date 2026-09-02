@@ -9,7 +9,7 @@
 
 
 Game::Game()
-    : state(GameState::Playing),
+    : state(GameState::Title),
       player(collisionmesh,Transform(), 0.8f),
 
       blockWorld(collisionmesh,1.0),
@@ -82,6 +82,7 @@ void Game::Update(float dt){
     switch (state)
     {
     case GameState::Title:
+        UpdateTitle(dt);
         break;
 
     case GameState::Playing:
@@ -97,12 +98,13 @@ void Game::Update(float dt){
 }
 
 void Game::UpdateTitle(float dt){
-    if(Input::IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_LEFT)){
-       
+    if(Input::IsJumpJustPressed()){
+        state = GameState::Playing;
     }
 }
 
 void Game::UpdatePlaying(float dt){
+    // ImGui::ShowDemoWindow();
         //マウス入力
         if (Input::IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_LEFT))
         {
