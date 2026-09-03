@@ -231,6 +231,9 @@ void Game::UpdatePlaying(float dt){
         // Playerの設定
         // shader.setInt("texture1",1);//プレイヤーのテクスチャ
         if(isBlocksSlect){
+            if(!isBlocksSlectPrev){
+                blockWorld.PlaceBlock(blockWorld.SnapToGrid(selectCube), objectTypes[currentTypeIndex], value, true);
+            }
             glm::vec3 front = camera.Front;
             front.y = 0;
             glm::vec3 right = camera.Right;
@@ -250,8 +253,6 @@ void Game::UpdatePlaying(float dt){
                     movement.y = 0;
                     movement += front*Input::GetJustMoveInput().y;
                 }
-            }else if(player.GetPosition().y==isUpBlock.y||player.GetPosition().y==isDownBlock.y){//プレイヤーがブロックの上か下にいる場合は上下移動を優先する
-                movement += up*Input::GetJustMoveInput().y;
             }else{
                 movement += front*Input::GetJustMoveInput().y;
             }
@@ -269,10 +270,13 @@ void Game::UpdatePlaying(float dt){
 
         }else{
             //自分以外のブロックに移動していた場合
-            if(isBlocksSlectPrev&&blockWorld.SnapToGrid(player.GetPosition())!=selectCube){
-                blockWorld.DeleteBlockSelected(selectCube);
-                blockWorld.PlaceBlock(player.GetPosition());
-                player.SetPosition(selectCube); 
+            if(isBlocksSlectPrev){
+                blockWorld.DeleteBlockSelected(player.GetPosition());
+                if(blockWorld.SnapToGrid(player.GetPosition())!=selectCube){
+                    blockWorld.DeleteBlockSelected(selectCube);
+                    blockWorld.PlaceBlock(player.GetPosition());
+                    player.SetPosition(selectCube); 
+                }
             }
             isBlocksSlectPrev = false;
             //カメラ関連
