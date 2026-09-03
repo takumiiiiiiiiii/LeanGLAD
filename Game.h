@@ -55,6 +55,8 @@ class Game{
     void UpdateTitle(float dt);
     void UpdatePlaying(float dt);
     void UpdateEditor(float dt);
-    
-    
+
+    private:
+    void PlaceBlockByMouse();
+    void RemoveBlockByMouse();
 };
