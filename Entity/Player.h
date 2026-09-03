@@ -71,7 +71,7 @@ private:
     const float groundedThreshold = 0.15f; // この距離以内なら接地とみなす
     //物理
     const float gravity   = -0.28f;
-    const float jumpForce =  0.1f;
+    const float jumpForce =  0.08f;
     //サイズ
 
     float size = 0;

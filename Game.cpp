@@ -95,40 +95,27 @@ void Game::Update(float dt){
 
     case GameState::Result:
         break;
+
+    case GameState::Editor:
+        UpdateEditor(dt);
+        break;
     }
 }
 
-void Game::UpdateEditor(float dt){
-    
-}
 
 void Game::UpdateTitle(float dt){
     if(Input::IsJumpJustPressed()){
         state = GameState::Playing;
     }
+    if(Input::IsKeyJustPressed(GLFW_KEY_E)){
+        state = GameState::Editor;
+    }
 }
 
 void Game::UpdatePlaying(float dt){
-
-       ImGui::Begin("Debug");
-       ImGui::Combo("Object Type", &currentTypeIndex, objectTypes, IM_ARRAYSIZE(objectTypes));
-        ImGui::InputInt("Value", &value);
-        ImGui::Text("Selected: %s", objectTypes[currentTypeIndex]);
-        
-        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-        ImGui::End();
-        
-    // ImGui::ShowDemoWindow();
-        //マウス入力
-
-        RemoveBlockByMouse();
-        PlaceBlockByMouse();
-        if(Input::IsKeyPressed(GLFW_KEY_Z)){
-            blockWorld.SaveToFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates_new.txt","blocks");
-        }
-        if(Input::IsKeyPressed(GLFW_KEY_X)){
-            blockWorld.LoadCubeStateFromFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates_new.txt");
-        }
+    if(Input::IsKeyJustPressed(GLFW_KEY_E)){
+        state = GameState::Editor;
+    }
         if(Input::IsBecomeBlockJustPressed()){
             //ブロックセレクトに入った時
             if(!isBlocksSlectPrev){
@@ -136,37 +123,22 @@ void Game::UpdatePlaying(float dt){
             }
             isBlocksSlect = !isBlocksSlect;
         }
-
+    
         shader.use();
-        player.SetMoveSpeed(10);
         //カメラの移動
 
         //テクスチャをミックスする度合いを変更
-        mix = 0;
-        int mixTexture = glGetUniformLocation(shader.ID,"smileMix");
-        glUniform1f(mixTexture,mix);
-
-
         // trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-
         // 画面をクリアするときの背景色を設定（暗い青緑色）
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         // 設定した色でカラーバッファ（画面）を実際に塗りつぶしてクリア
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         //色を変更
-
         //テクスチャを使用
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D,texture1);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D,texture2);
-        
-
-
-        //シェーダーに反映ture,mix);
-
-        // Playerの設定
-        // shader.setInt("texture1",1);//プレイヤーのテクスチャ
         if(isBlocksSlect){
             if(!isBlocksSlectPrev){
                 blockWorld.PlaceBlock(blockWorld.SnapToGrid(selectCube), objectTypes[currentTypeIndex], value, true);
@@ -221,6 +193,7 @@ void Game::UpdatePlaying(float dt){
             player.MoveWithCameraOrientation(camera,dt);
             player.Update(dt);
         }
+
         player.Draw(shader);
         player.TrunBlock(isBlocksSlect,blockWorld,dt);
 
@@ -234,25 +207,54 @@ void Game::UpdatePlaying(float dt){
         view = camera.GetViewMatrix();
         shader.setMat4("projection", projection);
         shader.setMat4("view",view);
-        // unsigned int transformLoc = glGetUniformLocation(shader.ID,"transform");
-        // glUniformMatrix4fv(transformLoc,1,GL_FALSE,glm::value_ptr(trans));
-
-        // glBindVertexArray(VAO[0]);
-        for(unsigned int i = 0; i < 10; i++)
-        {
-            // glm::mat4 model = glm::mat4(1.0f);
-            // model = glm::translate(model, cubePositions[i]);
-            // float angle = 20.0f * i; 
-            // model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            // shader.setMat4("model",model);
-
-            // cube.Draw();
-            // glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-        glDrawArrays(GL_TRIANGLES,0,36);
-        glDrawElements(GL_TRIANGLES,36,GL_UNSIGNED_INT,0);
 }
 
+void Game::UpdateEditor(float dt){
+    if(Input::IsKeyJustPressed(GLFW_KEY_P)){
+        state = GameState::Playing;
+    }
+    shader.use();
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    // 設定した色でカラーバッファ（画面）を実際に塗りつぶしてクリア
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //色を変更
+    //テクスチャを使用
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D,texture1);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D,texture2);
+    // ImGuiのデバッグウィンドウを表示
+    ImGui::Begin("Debug");
+    ImGui::Combo("Object Type", &currentTypeIndex, objectTypes, IM_ARRAYSIZE(objectTypes));
+    ImGui::InputInt("Value", &value);
+    ImGui::Text("Selected: %s", objectTypes[currentTypeIndex]);
+    ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+    ImGui::End();
+    // ImGui::ShowDemoWindow();
+    
+    //マウス入力
+    RemoveBlockByMouse();
+    PlaceBlockByMouse();
+     if(Input::IsKeyPressed(GLFW_KEY_Z)){
+        blockWorld.SaveToFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates_new.txt","blocks");
+    }
+    if(Input::IsKeyPressed(GLFW_KEY_X)){
+        blockWorld.LoadCubeStateFromFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates_new.txt");
+    }
+
+    //地形の描画
+    shader.setInt("texture1",0);
+
+    blockWorld.DrawAll(shader);
+
+    camera.Follow(glm::vec3(0.0f),dt);
+    //カメラ反映
+    projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    view = camera.GetViewMatrix();
+    shader.setMat4("projection", projection);
+    shader.setMat4("view",view);
+
+}
 void Game::RemoveBlockByMouse(){
     if (Input::IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_RIGHT)){
             double mx, my;
@@ -286,6 +288,7 @@ void Game::RemoveBlockByMouse(){
             }
         }
 }
+
 void Game::PlaceBlockByMouse(){
     if (Input::IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_LEFT))
     {

@@ -5,7 +5,7 @@
 Player::Player(CollisionMesh& groundCollision,const Transform& initialTransform, float size)
     : Object(initialTransform),
       cube(size),
-      moveSpeed(1.0f),
+      moveSpeed(6.0f),
       groundCollision(groundCollision),
       id_(next_id_++)
 {

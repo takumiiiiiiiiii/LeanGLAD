@@ -11,4 +11,20 @@ struct Kinematics
     {
         velocity += acceleration * deltaTime;
     }
+    void Move(glm::vec3 vector)
+    {
+        velocity += vector*velocity;
+    }
+    glm::vec3 GetVelocity(float deltaTime)
+    {
+        return velocity;
+    }
+    float GetSpeed(float deltaTime)
+    {
+        return glm::length(velocity);
+    }
+    float GetAccelerationMagnitude(float deltaTime)
+    {
+        return glm::length(acceleration);
+    }
 };

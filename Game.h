@@ -18,7 +18,8 @@ enum class GameState
     Title,
     Playing,
     Goal,
-    Result
+    Result,
+    Editor
 };
 // エディター側の状態(グローバル or Editorクラスのメンバ)
 static const char* objectTypes[] = { "Cube", "Plane", "Sphere" }; // 実際の種類名に置き換え
