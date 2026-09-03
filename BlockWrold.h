@@ -18,6 +18,7 @@ struct PlacedBlock
     std::string objectType;  // "Cube", "Plane" など
     float objectSize;        // オブジェクトのサイズ
     std::unique_ptr<class Object> object;  // CubeやPlaneなどの基底クラス
+    bool isShown = true; // 描画するかどうかのフラグ
 };
 
 class BlockWorld
@@ -29,7 +30,8 @@ public:
     // @param worldPos ワールド座標
     // @param objectType オブジェクト種類（"Cube"、"Plane"など）
     // @param objectSize オブジェクトのサイズ（デフォルト: 1.0f）
-    void PlaceBlock(const glm::vec3& worldPos, const std::string& objectType = "Cube", float objectSize = 1.0f);
+    // @param isShown 描画するかどうかのフラグ（デフォルト: true）
+    void PlaceBlock(const glm::vec3& worldPos, const std::string& objectType = "Cube", float objectSize = 1.0f, bool isShown = true);
 
     void DrawAll(Shader& shader);
 
@@ -53,6 +55,7 @@ public:
         glm::vec3 position;
         std::string objectType;
         float objectSize;
+        bool isShown = true; // 描画するかどうかのフラグ
     };
     ParsedBlockData parseBlockLine(const std::string& line, std::size_t lineNumber) const;
     std::vector<ParsedBlockData> readBlockDataFromFile(const std::string& filepath) const;
@@ -61,8 +64,9 @@ public:
 private:
     bool IsOccupied(const glm::vec3& worldPos) const;
     //ファイルの処理
-
     CollisionMesh& collisionMesh;
     float cubeSize;
     std::vector<PlacedBlock> blocks;
+    //ファイルの列数
+    int expectedColumnCount = 6; // PlacedBlockの列数: x, y, z, objectType, size, isShown
 };

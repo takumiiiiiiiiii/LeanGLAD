@@ -20,6 +20,10 @@ enum class GameState
     Goal,
     Result
 };
+// エディター側の状態(グローバル or Editorクラスのメンバ)
+static const char* objectTypes[] = { "Cube", "Plane", "Sphere" }; // 実際の種類名に置き換え
+static int currentTypeIndex = 0;
+static int value = 1;
 
 class Game{
     public:
@@ -44,11 +48,13 @@ class Game{
     glm::mat4 view;
     //コリジョン
     CollisionMesh collisionmesh;
+    //エディター
     Game();
     void Initialize();
     void Update(float dt);
     void UpdateTitle(float dt);
     void UpdatePlaying(float dt);
+    void UpdateEditor(float dt);
     
     
 };

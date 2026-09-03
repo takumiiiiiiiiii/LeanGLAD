@@ -126,6 +126,8 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+ 
+
         // ★フレームの最初に必ずUpdateを呼び出す
         Input::Update();
         // エスケープキーなどの入力入力を監視・処理

@@ -75,8 +75,9 @@ void Game::Initialize()
     //床のコリジョンを設定
 
     blockWorld.LoadCubeStateFromFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates_new.txt");
-    
 }
+
+
 
 void Game::Update(float dt){
     switch (state)
@@ -97,6 +98,10 @@ void Game::Update(float dt){
     }
 }
 
+void Game::UpdateEditor(float dt){
+    
+}
+
 void Game::UpdateTitle(float dt){
     if(Input::IsJumpJustPressed()){
         state = GameState::Playing;
@@ -104,6 +109,15 @@ void Game::UpdateTitle(float dt){
 }
 
 void Game::UpdatePlaying(float dt){
+
+       ImGui::Begin("Debug");
+       ImGui::Combo("Object Type", &currentTypeIndex, objectTypes, IM_ARRAYSIZE(objectTypes));
+        ImGui::InputInt("Value", &value);
+        ImGui::Text("Selected: %s", objectTypes[currentTypeIndex]);
+        
+        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+        ImGui::End();
+        
     // ImGui::ShowDemoWindow();
         //マウス入力
         if (Input::IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_LEFT))
@@ -134,7 +148,7 @@ void Game::UpdatePlaying(float dt){
                 // → Planeの上面をクリックすれば真上に、既存キューブの側面をクリックすればその横に置ける
                 glm::vec3 placePos = hitPos + normal * 0.5f;
                 // PlaceObject(hitPos); // ここで実際にオブジェクトを生成・配置する
-                blockWorld.PlaceBlock(placePos);
+                blockWorld.PlaceBlock(placePos, objectTypes[currentTypeIndex], value); // ここで実際にオブジェクトを生成・配置する
             }
 
         }
@@ -170,10 +184,10 @@ void Game::UpdatePlaying(float dt){
             }
         }
         if(Input::IsKeyPressed(GLFW_KEY_Z)){
-            blockWorld.SaveToFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates.txt","blocks");
+            blockWorld.SaveToFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates_new.txt","blocks");
         }
         if(Input::IsKeyPressed(GLFW_KEY_X)){
-            blockWorld.LoadCubeStateFromFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates.txt");
+            blockWorld.LoadCubeStateFromFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates_new.txt");
         }
         if(Input::IsBecomeBlockJustPressed()){
             
@@ -226,9 +240,17 @@ void Game::UpdatePlaying(float dt){
             //ブロックの上か下にブロックがある場合は上下移動を優先する　
             glm::vec3 isUpBlock = blockWorld.SnapToGrid(selectCube+up*blockWorld.Getcubesize());
             glm::vec3 isDownBlock = blockWorld.SnapToGrid(selectCube-up*blockWorld.Getcubesize());
+            //ブロックの上か下にブロックがある場合は上下移動を優先する
             if(blockWorld.CheckBlockSelectedPos(isUpBlock)||blockWorld.CheckBlockSelectedPos(isDownBlock)){
                 movement += up*Input::GetJustMoveInput().y;
-            }else if(player.GetPosition().y==isUpBlock.y||player.GetPosition().y==isDownBlock.y){
+                if(!blockWorld.CheckBlockSelectedPos(isUpBlock)&&movement.y>0){//上にブロックがない場合は上に移動できる
+                    movement.y = 0;
+                    movement += front*Input::GetJustMoveInput().y;
+                }else if(!blockWorld.CheckBlockSelectedPos(isDownBlock)&&movement.y<0){//下にブロックがない場合は下に移動できる
+                    movement.y = 0;
+                    movement += front*Input::GetJustMoveInput().y;
+                }
+            }else if(player.GetPosition().y==isUpBlock.y||player.GetPosition().y==isDownBlock.y){//プレイヤーがブロックの上か下にいる場合は上下移動を優先する
                 movement += up*Input::GetJustMoveInput().y;
             }else{
                 movement += front*Input::GetJustMoveInput().y;

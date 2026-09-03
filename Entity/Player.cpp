@@ -63,7 +63,6 @@ void Player::MoveWithCameraOrientation(Camera& camera, float deltaTime)
 
     glm::vec3 movement(0.0f);
 
-    std::cout << "Press W" << std::endl;
     movement += forward*Input::GetMoveInput().y;
     movement += ringt*Input::GetMoveInput().x;
 
@@ -238,7 +237,7 @@ glm::vec3 Player::ResolveWallCollision(const glm::vec3& currentPos, const glm::v
 {
     glm::vec3 result = desiredDelta;
     float half = size / 2.0f;
-    float offset = half-0.1f;
+    float offset = half-0.05f;
     //四角形のため四隅からレイを飛ばす
     glm::vec3 offsetsX[4] = {
         { 0, offset,  offset},

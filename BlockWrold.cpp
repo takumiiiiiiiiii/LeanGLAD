@@ -83,7 +83,7 @@ bool BlockWorld::IsOccupied(const glm::vec3& worldPos) const
     return false;
 }
 
-void BlockWorld::PlaceBlock(const glm::vec3& worldPos, const std::string& objectType, float objectSize)
+void BlockWorld::PlaceBlock(const glm::vec3& worldPos, const std::string& objectType, float objectSize, bool isShown)
 {
     // セルインデックスをfloorで求め、そのセルの中心(index + 0.5)*cubeSizeにスナップする。
     // Cubeは中心基準(-0.5〜+0.5)なので、中心をセル境界の真ん中に合わせる必要がある。
@@ -109,6 +109,7 @@ void BlockWorld::PlaceBlock(const glm::vec3& worldPos, const std::string& object
     }
     else if (objectType == "Plane") {
         auto plane = std::make_unique<Plane>(objectSize);
+        snapped.y -= 0.5f * objectSize; // Planeの中心を下げる
         plane->GetTransform().SetPosition(snapped);
         plane->RegisterCollision(collisionMesh);
         newObject = std::move(plane);
@@ -120,7 +121,7 @@ void BlockWorld::PlaceBlock(const glm::vec3& worldPos, const std::string& object
         return;
     }
 
-    blocks.push_back(PlacedBlock{ snapped, objectType, objectSize, std::move(newObject) });
+    blocks.push_back(PlacedBlock{ snapped, objectType, objectSize, std::move(newObject), isShown });
 }
 
 bool BlockWorld::SaveToFile(const std::string& filepath,const std::string& filename) const
@@ -143,7 +144,9 @@ bool BlockWorld::SaveToFile(const std::string& filepath,const std::string& filen
                 << p.position.y << ","
                 << p.position.z << ","
                 << p.objectType << ","
-                << std::fixed << std::setprecision(2) << p.objectSize << "\n";
+                << std::fixed << std::setprecision(2) << p.objectSize << "," 
+                << (p.isShown ? "true" : "false")
+                << "\n";
         }
  
         ofs.close();
@@ -191,10 +194,10 @@ glm::vec3 BlockWorld::parseLine(const std::string& line, std::size_t lineNumber)
         }
     }
  
-    if (values.size() != 3) {
+    if (values.size() != expectedColumnCount) {
         throw std::runtime_error(
             "列数が不正です (行 " + std::to_string(lineNumber) +
-            ", 期待値: 3, 実際: " + std::to_string(values.size()) + ")");
+            ", 期待値: " + std::to_string(expectedColumnCount) + ", 実際: " + std::to_string(values.size()) + ")");
     }
  
     return glm::vec3{ values[0], values[1], values[2] };
@@ -213,10 +216,10 @@ BlockWorld::ParsedBlockData BlockWorld::parseBlockLine(const std::string& line, 
         tokens.push_back(token);
     }
  
-    if (tokens.size() != 5) {
+    if (tokens.size() != expectedColumnCount) {
         throw std::runtime_error(
             "列数が不正です (行 " + std::to_string(lineNumber) +
-            ", 期待値: 5 (x,y,z,objectType,size), 実際: " + std::to_string(tokens.size()) + ")");
+            ", 期待値: " + std::to_string(expectedColumnCount) + ", 実際: " + std::to_string(tokens.size()) + ")");
     }
  
     try {
@@ -243,8 +246,19 @@ BlockWorld::ParsedBlockData BlockWorld::parseBlockLine(const std::string& line, 
         if (pos != tokens[4].size()) {
             throw std::invalid_argument("余分な文字が含まれています");
         }
+
+        // isShown をパース
+        bool isShown = true; // デフォルト値
+        std::string isShownStr = tokens[5];
+        if (isShownStr == "true" || isShownStr == "1") {
+            isShown = true;
+        } else if (isShownStr == "false" || isShownStr == "0") {
+            isShown = false;
+        } else {
+            throw std::invalid_argument("isShown は true/false または 1/0 で指定してください");
+        }
         
-        return ParsedBlockData{ glm::vec3{x, y, z}, objectType, size };
+        return ParsedBlockData{ glm::vec3{x, y, z}, objectType, size, isShown };
     }
     catch (const std::invalid_argument& e) {
         throw std::runtime_error(
@@ -356,7 +370,8 @@ bool BlockWorld::LoadCubeStateFromFile(const std::string& filepath){
                 blockData.position,
                 blockData.objectType,
                 blockData.objectSize,
-                std::move(newObject)
+                std::move(newObject),
+                blockData.isShown
             });
         }
         
@@ -372,6 +387,8 @@ void BlockWorld::DrawAll(Shader& shader)
 {
     for (auto& block : blocks)
     {
+        if (!block.isShown) continue; // 描画フラグがfalseの場合はスキップ
+        if (!block.object) continue; // objectがnullptrの場合はスキップ
         block.object->Draw(shader);
     }
 }
