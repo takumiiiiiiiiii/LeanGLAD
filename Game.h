@@ -25,8 +25,11 @@ enum class GameState
 };
 // エディター側の状態(グローバル or Editorクラスのメンバ)
 static const char* objectTypes[] = { "Cube", "Plane", "Wall" }; // 実際の種類名に置き換え
+static const char* editorStates[] = { "Place", "Remove", "Select" };
 static int currentTypeIndex = 0;
+static int currentStateIndex = 0;
 static int value = 1;
+
 
 class Game{
     public:
@@ -62,4 +65,5 @@ class Game{
     private:
     void PlaceBlockByMouse();
     void RemoveBlockByMouse();
+    void SelectBlockByMouse();
 };

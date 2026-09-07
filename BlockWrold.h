@@ -21,6 +21,7 @@ struct PlacedBlock
     bool isShown = true; // 描画するかどうかのフラグ
 };
 
+
 class BlockWorld
 {
 public:

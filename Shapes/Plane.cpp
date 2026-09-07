@@ -82,6 +82,10 @@ Plane::~Plane()
 
 void Plane::Draw(Shader& shader)
 {
+    if (textureID != 0) {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+    }
     shader.setMat4("model", transform.GetModelMatrix());
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -90,6 +94,8 @@ void Plane::Draw(Shader& shader)
 
 void Plane::SetTexture(GLuint textureID)
 {
+    this->textureID = textureID;
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureID);
 }
 

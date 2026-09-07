@@ -68,6 +68,12 @@ bool BlockWorld::DeleteBlockSelected(const glm::vec3& Pos) {
             }
             else if (it->objectType == "Plane") {
                 collisionMesh.removeTrianglesForObject(it->object.get());
+            }else if (it->objectType == "Wall") {
+                if (auto* cubePtr = dynamic_cast<Cube*>(it->object.get())) {
+                    if (!collisionMesh.removeCubeById(cubePtr->GetCubeId())) {
+                        std::cerr << "警告: Wall Cube ID による削除に失敗しました\n";
+                    }
+                }
             }
             
             blocks.erase(it);
