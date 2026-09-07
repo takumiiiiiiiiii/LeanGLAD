@@ -25,6 +25,7 @@ struct GroundHitInfo
 class Player : public Object
 {
 public:
+
     explicit Player(CollisionMesh& groundCollision,const Transform& initialTransform = Transform(), float size = 1.0f);
     void Update(float deltaTime) override;
     void Draw(Shader& shader) override;

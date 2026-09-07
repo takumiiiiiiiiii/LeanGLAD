@@ -181,7 +181,7 @@ void Game::UpdatePlaying(float dt){
     glBindTexture(GL_TEXTURE_2D,texture2);
     if(isBlocksSlect){
         if(!isBlocksSlectPrev){
-            blockWorld.PlaceBlock(blockWorld.SnapToGrid(selectCube), objectTypes[currentTypeIndex], value, true);
+            blockWorld.PlaceBlock(blockWorld.SnapToGrid(selectCube), "Cube", 1.0, false);
         }
         glm::vec3 front = camera.Front;
         front.y = 0;
@@ -219,9 +219,9 @@ void Game::UpdatePlaying(float dt){
     }else{
         //自分以外のブロックに移動していた場合
         if(isBlocksSlectPrev){
-            blockWorld.DeleteBlockSelected(player.GetPosition());
+            blockWorld.DeleteBlockSelected(player.GetPosition(),"Cube");
             if(blockWorld.SnapToGrid(player.GetPosition())!=selectCube){
-                blockWorld.DeleteBlockSelected(selectCube);
+                blockWorld.DeleteBlockSelected(selectCube,"Cube");
                 blockWorld.PlaceBlock(player.GetPosition());
                 player.SetPosition(selectCube); 
             }
@@ -251,13 +251,16 @@ void Game::UpdatePlaying(float dt){
 
 void Game::UpdateEditor(float dt){
      // ImGuiのデバッグウィンドウを表示
-    ImGui::Begin("Debug");
-    ImGui::Combo("Editor State", &currentStateIndex, editorStates, IM_ARRAYSIZE(editorStates));
-    ImGui::Combo("Object Type", &currentTypeIndex, objectTypes, IM_ARRAYSIZE(objectTypes));
-    ImGui::InputInt("Value", &value);
-    ImGui::Text("Selected: %s", objectTypes[currentTypeIndex]);
-    ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-    ImGui::End();
+    // ImGui::Begin("Debug");
+    // ImGui::Combo("Editor State", &currentStateIndex, editorStates, IM_ARRAYSIZE(editorStates));
+    // ImGui::Combo("Object Type", &currentTypeIndex, objectTypes, IM_ARRAYSIZE(objectTypes));
+    // ImGui::InputInt("Value", &value);
+    // ImGui::Text("Selected: %s", objectTypes[currentTypeIndex]);
+    // ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+    // ImGui::End();
+    stageEditor.UpdateEditor(dt);
+    stageEditor.PlaceBlockByMouse(collisionmesh,blockWorld,view,projection);
+    stageEditor.RemoveBlockByMouse(collisionmesh,blockWorld,view,projection);
     if(Input::IsKeyJustPressed(GLFW_KEY_P)){
         state = GameState::Playing;
     }
@@ -298,101 +301,73 @@ void Game::UpdateEditor(float dt){
 
 }
 void Game::RemoveBlockByMouse(){
-    if (ImGui::GetIO().WantCaptureMouse ||
-        !Input::IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_RIGHT))
-    {
-        return;
-    }
-            double mx, my;
-            Input::GetMousePosition(mx, my);
-            glm::vec3 rayOrigin, rayDir;
-            //クリック位置のワールド座標取得
-            screenPosToWorldRay(mx, my, SCR_WIDTH, SCR_HEIGHT, view,projection, rayOrigin,rayDir);
-             float dist;
-            glm::vec3 normal;
-            if (collisionmesh.raycast(rayOrigin, rayDir, dist, normal))
-            {
-                std::cout << "rayOrigin.y=" << rayOrigin.y
-                        << " dist=" << dist
-                        << " normal=(" << normal.x << "," << normal.y << "," << normal.z << ")"
-                        << std::endl;
-
-                glm::vec3 hitPos = rayOrigin + rayDir * dist;
-                std::cout << "hitPos.y=" << hitPos.y << std::endl;
-                // ヒット面の法線方向にキューブ半径(0.5)分ずらす
-                // → Planeの上面をクリックすれば真上に、既存キューブの側面をクリックすればその横に置ける
-                // PlaceObject(hitPos); // ここで実際にオブジェクトを生成・配置する
-                // 表面上の座標はセル境界になるため、少し内側へ戻して対象セルを求める
-                const glm::vec3 deletePos = hitPos - normal * 0.001f;
-                std::cout << "delete result="
-                          << blockWorld.DeleteBlockSelected(deletePos) << std::endl;
-            }
+   
 }
 
 void Game::PlaceBlockByMouse(){
-    if (ImGui::GetIO().WantCaptureMouse ||
-        !Input::IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_LEFT))
-    {
-        return;
-    }
-     if (editorStates[currentStateIndex] != std::string("Place"))
-    {
-        return;
-    }
+    // if (ImGui::GetIO().WantCaptureMouse ||
+    //     !Input::IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_LEFT))
+    // {
+    //     return;
+    // }
+    //  if (editorStates[currentStateIndex] != std::string("Place"))
+    // {
+    //     return;
+    // }
 
-    double mx, my;
-    Input::GetMousePosition(mx, my);
+    // double mx, my;
+    // Input::GetMousePosition(mx, my);
 
-    glm::vec3 rayOrigin, rayDir;
-    //クリック位置のワールド座標取得
-    screenPosToWorldRay(mx, my, SCR_WIDTH, SCR_HEIGHT, view,projection, rayOrigin,rayDir);
+    // glm::vec3 rayOrigin, rayDir;
+    // //クリック位置のワールド座標取得
+    // screenPosToWorldRay(mx, my, SCR_WIDTH, SCR_HEIGHT, view,projection, rayOrigin,rayDir);
 
-    float dist;
-    glm::vec3 normal;
-    if (collisionmesh.raycast(rayOrigin, rayDir, dist, normal))
-    {
-        std::cout << "rayOrigin.y=" << rayOrigin.y
-                << " dist=" << dist
-                << " normal=(" << normal.x << "," << normal.y << "," << normal.z << ")"
-                << std::endl;
-        glm::vec3 hitPos = rayOrigin + rayDir * dist;
-        std::cout << "hitPos.y=" << hitPos.y << std::endl;
-        // ヒット面の法線方向にキューブ半径(0.5)分ずらす
-        // → Planeの上面をクリックすれば真上に、既存キューブの側面をクリックすればその横に置ける
-        glm::vec3 placePos = hitPos + normal * 0.5f;
-        // PlaceObject(hitPos); // ここで実際にオブジェクトを生成・配置する
-        blockWorld.PlaceBlock(placePos, objectTypes[currentTypeIndex], value); // ここで実際にオブジェクトを生成・配置する
-    }
+    // float dist;
+    // glm::vec3 normal;
+    // if (collisionmesh.raycast(rayOrigin, rayDir, dist, normal))
+    // {
+    //     std::cout << "rayOrigin.y=" << rayOrigin.y
+    //             << " dist=" << dist
+    //             << " normal=(" << normal.x << "," << normal.y << "," << normal.z << ")"
+    //             << std::endl;
+    //     glm::vec3 hitPos = rayOrigin + rayDir * dist;
+    //     std::cout << "hitPos.y=" << hitPos.y << std::endl;
+    //     // ヒット面の法線方向にキューブ半径(0.5)分ずらす
+    //     // → Planeの上面をクリックすれば真上に、既存キューブの側面をクリックすればその横に置ける
+    //     glm::vec3 placePos = hitPos + normal * 0.5f;
+    //     // PlaceObject(hitPos); // ここで実際にオブジェクトを生成・配置する
+    //     blockWorld.PlaceBlock(placePos, objectTypes[currentTypeIndex], value); // ここで実際にオブジェクトを生成・配置する
+    // }
 }
 
 void Game::SelectBlockByMouse(){
-    if (ImGui::GetIO().WantCaptureMouse ||
-        !Input::IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_LEFT))
-    {
-        return;
-    }
+    // if (ImGui::GetIO().WantCaptureMouse ||
+    //     !Input::IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_LEFT))
+    // {
+    //     return;
+    // }
 
-        double mx, my;
-        Input::GetMousePosition(mx, my);
+    //     double mx, my;
+    //     Input::GetMousePosition(mx, my);
 
-        glm::vec3 rayOrigin, rayDir;
-        //クリック位置のワールド座標取得
-        screenPosToWorldRay(mx, my, SCR_WIDTH, SCR_HEIGHT, view,projection, rayOrigin,rayDir);
+    //     glm::vec3 rayOrigin, rayDir;
+    //     //クリック位置のワールド座標取得
+    //     screenPosToWorldRay(mx, my, SCR_WIDTH, SCR_HEIGHT, view,projection, rayOrigin,rayDir);
 
-        float dist;
-        glm::vec3 normal;
-        if (collisionmesh.raycast(rayOrigin, rayDir, dist, normal))
-        {
-            std::cout << "rayOrigin.y=" << rayOrigin.y
-                    << " dist=" << dist
-                    << " normal=(" << normal.x << "," << normal.y << "," << normal.z << ")"
-                    << std::endl;
-            glm::vec3 hitPos = rayOrigin + rayDir * dist;
-            std::cout << "hitPos.y=" << hitPos.y << std::endl;
-            // ヒット面の法線方向にキューブ半径(0.5)分ずらす
-            // → Planeの上面をクリックすれば真上に、既存キューブの側面をクリックすればその横に置ける
-            glm::vec3 placePos = hitPos + normal * 0.5f;
-            // PlaceObject(hitPos); // ここで実際にオブジェクトを生成・配置する
-            blockWorld.PlaceBlock(placePos, objectTypes[currentTypeIndex], value); // ここで実際にオブジェクトを生成・配置する
-        }
+    //     float dist;
+    //     glm::vec3 normal;
+    //     if (collisionmesh.raycast(rayOrigin, rayDir, dist, normal))
+    //     {
+    //         std::cout << "rayOrigin.y=" << rayOrigin.y
+    //                 << " dist=" << dist
+    //                 << " normal=(" << normal.x << "," << normal.y << "," << normal.z << ")"
+    //                 << std::endl;
+    //         glm::vec3 hitPos = rayOrigin + rayDir * dist;
+    //         std::cout << "hitPos.y=" << hitPos.y << std::endl;
+    //         // ヒット面の法線方向にキューブ半径(0.5)分ずらす
+    //         // → Planeの上面をクリックすれば真上に、既存キューブの側面をクリックすればその横に置ける
+    //         glm::vec3 placePos = hitPos + normal * 0.5f;
+    //         // PlaceObject(hitPos); // ここで実際にオブジェクトを生成・配置する
+    //         blockWorld.PlaceBlock(placePos, objectTypes[currentTypeIndex], value); // ここで実際にオブジェクトを生成・配置する
+    //     }
 }

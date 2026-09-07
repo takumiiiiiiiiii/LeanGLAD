@@ -28,9 +28,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 // キーボード入力を処理する関数（特定のキーが押されたかチェックする）
 void processInput(GLFWwindow *window);
 
-// 画面の初期サイズ（幅と高さ）
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
 
 //時間
 float deltaTime = 0.0f;	// Time between current frame and last frame

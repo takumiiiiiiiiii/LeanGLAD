@@ -51,37 +51,52 @@ bool BlockWorld::GetBlockPosition(const glm::vec3& pos,glm::vec3& blockPosition)
     }
     return false;
 }
-bool BlockWorld::DeleteBlockSelected(const glm::vec3& Pos) {
+bool BlockWorld::DeleteBlockSelected(
+    const glm::vec3& Pos,
+    const std::string& objectName)
+{
     const glm::vec3 cellPos = SnapToGrid(Pos);
+    bool deleted = false;
 
-    for (auto it = blocks.begin(); it != blocks.end(); ++it)
+    for (auto it = blocks.begin(); it != blocks.end();)
     {
-        if (SnapToGrid(it->position) == cellPos)
+        // 座標が一致しない場合
+        if (SnapToGrid(it->position) != cellPos) {
+            ++it;
+            continue;
+        }
+
+        // objectNameが指定されている場合は、その種類だけ削除
+        if (!objectName.empty() && it->objectType != objectName) {
+            ++it;
+            continue;
+        }
+
+        if (it->objectType == "Cube" ||
+            it->objectType == "Wall" ||
+            it->objectType == "wall")
         {
-            // Cubeの場合のみCube IDで三角形を削除
-            if (it->objectType == "Cube") {
-                if (auto* cubePtr = dynamic_cast<Cube*>(it->object.get())) {
-                    if (!collisionMesh.removeCubeById(cubePtr->GetCubeId())) {
-                        std::cerr << "警告: Cube ID による削除に失敗しました\n";
-                    }
+            if (auto* cubePtr = dynamic_cast<Cube*>(it->object.get())) {
+                if (!collisionMesh.removeCubeById(cubePtr->GetCubeId())) {
+                    std::cerr << "警告: Cube ID による削除に失敗しました\n";
                 }
             }
-            else if (it->objectType == "Plane") {
-                collisionMesh.removeTrianglesForObject(it->object.get());
-            }else if (it->objectType == "Wall") {
-                if (auto* cubePtr = dynamic_cast<Cube*>(it->object.get())) {
-                    if (!collisionMesh.removeCubeById(cubePtr->GetCubeId())) {
-                        std::cerr << "警告: Wall Cube ID による削除に失敗しました\n";
-                    }
-                }
-            }
-            
-            blocks.erase(it);
-            return true;
+        }
+        else if (it->objectType == "Plane")
+        {
+            collisionMesh.removeTrianglesForObject(it->object.get());
+        }
+
+        it = blocks.erase(it);
+        deleted = true;
+
+        // 名前指定時は1個だけ削除
+        if (!objectName.empty()) {
+            break;
         }
     }
 
-    return false;
+    return deleted;
 }
 
 bool BlockWorld::IsOccupied(const glm::vec3& worldPos) const

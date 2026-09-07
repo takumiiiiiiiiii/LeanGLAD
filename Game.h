@@ -12,7 +12,8 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-
+#include "global.h"
+#include "StageEditor.h"
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
 
 enum class GameState
@@ -23,14 +24,7 @@ enum class GameState
     Result,
     Editor
 };
-// エディター側の状態(グローバル or Editorクラスのメンバ)
-static const char* objectTypes[] = { "Cube", "Plane", "Wall" }; // 実際の種類名に置き換え
-static const char* editorStates[] = { "Place", "Remove", "Select" };
-static int currentTypeIndex = 0;
-static int currentStateIndex = 0;
-static int value = 1;
-
-
+// 画面の初期サイズ（幅と高さ）
 class Game{
     public:
     bool isBlocksSlect=false;
@@ -46,15 +40,14 @@ class Game{
     float mix;
     //テクスチャ
     unsigned int texture1,texture2;
-    // 画面の初期サイズ（幅と高さ）
-    const unsigned int SCR_WIDTH = 800;
-    const unsigned int SCR_HEIGHT = 600;
+
     //マトリクス
     glm::mat4 projection;
     glm::mat4 view;
+    //エディター
+    StageEditor stageEditor;
     //コリジョン
     CollisionMesh collisionmesh;
-    //エディター
     Game();
     void Initialize();
     void Update(float dt);

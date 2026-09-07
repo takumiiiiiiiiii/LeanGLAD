@@ -38,6 +38,7 @@ add_executable(OpenGLTest
     Collision/RayCast.cpp
     BlockWrold.cpp
     Entity/PlayerManager.cpp
+    StageEditor.h
     StageEditor.cpp
     ${IMGUI_DIR}/imgui.cpp
     ${IMGUI_DIR}/imgui_draw.cpp
