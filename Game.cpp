@@ -7,6 +7,44 @@
 #include "Shapes/Plane.h"
 #include "Shapes/Cube.h"
 
+namespace
+{
+    float lastX = 400.0f;
+    float lastY = 300.0f;
+    bool firstMouse = true;
+}
+
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+{
+    Game* game = static_cast<Game*>(glfwGetWindowUserPointer(window));
+    if (game == nullptr || game->state != GameState::Editor ||
+        glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) != GLFW_PRESS)
+    {
+        firstMouse = true;
+        return;
+    }
+
+    float xpos = static_cast<float>(xposIn);
+    float ypos = static_cast<float>(yposIn);
+
+    if (firstMouse)
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos;
+
+    lastX = xpos;
+    lastY = ypos;
+
+    game->camera.ProcessMouseMovement(
+        xoffset * game->camera.MouseSensitivity,
+        yoffset * game->camera.MouseSensitivity
+    );
+}
+
 
 Game::Game()
     : state(GameState::Title),
@@ -56,7 +94,7 @@ void Game::Initialize()
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
     //stbによるテクスチャ画像読み込み
     stbi_set_flip_vertically_on_load(true);
-    data = stbi_load("../Textures/awesomeface.png",&width,&height,&nrChannles,0);
+    data = stbi_load("../Textures/wall.png",&width,&height,&nrChannles,0);
     if(data)
     {
         glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,data);
@@ -67,6 +105,7 @@ void Game::Initialize()
 
     stbi_image_free(data);
 
+    blockWorld.SetCubeTextures(texture1, texture2);
     shader.use();
     shader.setInt("texture1",0);
     shader.setInt("texture2",1);
@@ -116,103 +155,111 @@ void Game::UpdatePlaying(float dt){
     if(Input::IsKeyJustPressed(GLFW_KEY_E)){
         state = GameState::Editor;
     }
-        if(Input::IsBecomeBlockJustPressed()){
-            //ブロックセレクトに入った時
-            if(!isBlocksSlectPrev){
-                selectCube = player.GetPosition();
-            }
-            isBlocksSlect = !isBlocksSlect;
+    if(Input::IsBecomeBlockJustPressed()){
+        //ブロックセレクトに入った時
+        if(!isBlocksSlectPrev){
+            selectCube = player.GetPosition();
         }
-    
-        shader.use();
-        //カメラの移動
+        isBlocksSlect = !isBlocksSlect;
+    }
 
-        //テクスチャをミックスする度合いを変更
-        // trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-        // 画面をクリアするときの背景色を設定（暗い青緑色）
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        // 設定した色でカラーバッファ（画面）を実際に塗りつぶしてクリア
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        //色を変更
-        //テクスチャを使用
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D,texture1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D,texture2);
-        if(isBlocksSlect){
-            if(!isBlocksSlectPrev){
-                blockWorld.PlaceBlock(blockWorld.SnapToGrid(selectCube), objectTypes[currentTypeIndex], value, true);
-            }
-            glm::vec3 front = camera.Front;
-            front.y = 0;
-            glm::vec3 right = camera.Right;
-            glm::vec3 up = camera.Up;
-            right = glm::normalize(right);
-            glm::vec3 movement(0.0f);
-            //ブロックの上か下にブロックがある場合は上下移動を優先する　
-            glm::vec3 isUpBlock = blockWorld.SnapToGrid(selectCube+up*blockWorld.Getcubesize());
-            glm::vec3 isDownBlock = blockWorld.SnapToGrid(selectCube-up*blockWorld.Getcubesize());
-            //ブロックの上か下にブロックがある場合は上下移動を優先する
-            if(blockWorld.CheckBlockSelectedPos(isUpBlock)||blockWorld.CheckBlockSelectedPos(isDownBlock)){
-                movement += up*Input::GetJustMoveInput().y;
-                if(!blockWorld.CheckBlockSelectedPos(isUpBlock)&&movement.y>0){//上にブロックがない場合は上に移動できる
-                    movement.y = 0;
-                    movement += front*Input::GetJustMoveInput().y;
-                }else if(!blockWorld.CheckBlockSelectedPos(isDownBlock)&&movement.y<0){//下にブロックがない場合は下に移動できる
-                    movement.y = 0;
-                    movement += front*Input::GetJustMoveInput().y;
-                }
-            }else{
+    shader.use();
+    //カメラの移動
+
+    //テクスチャをミックスする度合いを変更
+    // trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+    // 画面をクリアするときの背景色を設定（暗い青緑色）
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    // 設定した色でカラーバッファ（画面）を実際に塗りつぶしてクリア
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //色を変更
+    //テクスチャを使用
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D,texture1);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D,texture2);
+    if(isBlocksSlect){
+        if(!isBlocksSlectPrev){
+            blockWorld.PlaceBlock(blockWorld.SnapToGrid(selectCube), objectTypes[currentTypeIndex], value, true);
+        }
+        glm::vec3 front = camera.Front;
+        front.y = 0;
+        glm::vec3 right = camera.Right;
+        glm::vec3 up = camera.Up;
+        right = glm::normalize(right);
+        glm::vec3 movement(0.0f);
+        //ブロックの上か下にブロックがある場合は上下移動を優先する　
+        glm::vec3 isUpBlock = blockWorld.SnapToGrid(selectCube+up*blockWorld.Getcubesize());
+        glm::vec3 isDownBlock = blockWorld.SnapToGrid(selectCube-up*blockWorld.Getcubesize());
+        //ブロックの上か下にブロックがある場合は上下移動を優先する
+        if(blockWorld.CheckBlockSelectedPos(isUpBlock)||blockWorld.CheckBlockSelectedPos(isDownBlock)){
+            movement += up*Input::GetJustMoveInput().y;
+            if(!blockWorld.CheckBlockSelectedPos(isUpBlock)&&movement.y>0){//上にブロックがない場合は上に移動できる
+                movement.y = 0;
+                movement += front*Input::GetJustMoveInput().y;
+            }else if(!blockWorld.CheckBlockSelectedPos(isDownBlock)&&movement.y<0){//下にブロックがない場合は下に移動できる
+                movement.y = 0;
                 movement += front*Input::GetJustMoveInput().y;
             }
-
-            movement += right*Input::GetJustMoveInput().x;
-            //プレイヤーの移動方向の座標
-            glm::vec3 movePos=blockWorld.SnapToGrid(selectCube+movement*blockWorld.Getcubesize());
-            //移動方向にブロックがあるか
-            if(blockWorld.CheckBlockSelectedPos(movePos)||blockWorld.SnapToGrid(player.GetPosition())==movePos){
-                selectCube = movePos;
-            }
-            camera.Follow(selectCube,dt);
-            camera.FollowRotate(selectCube, 100.0,dt);
-            isBlocksSlectPrev = true;
         }else{
-            //自分以外のブロックに移動していた場合
-            if(isBlocksSlectPrev){
-                blockWorld.DeleteBlockSelected(player.GetPosition());
-                if(blockWorld.SnapToGrid(player.GetPosition())!=selectCube){
-                    blockWorld.DeleteBlockSelected(selectCube);
-                    blockWorld.PlaceBlock(player.GetPosition());
-                    player.SetPosition(selectCube); 
-                }
-            }
-            isBlocksSlectPrev = false;
-            //カメラ関連
-            camera.Follow(player.GetPosition(),dt);
-            camera.FollowRotate(player.GetPosition(), 100.0,dt);
-            player.MoveWithCameraOrientation(camera,dt);
-            player.Update(dt);
+            movement += front*Input::GetJustMoveInput().y;
         }
 
-        player.Draw(shader);
-        player.TrunBlock(isBlocksSlect,blockWorld,dt);
+        movement += right*Input::GetJustMoveInput().x;
+        //プレイヤーの移動方向の座標
+        glm::vec3 movePos=blockWorld.SnapToGrid(selectCube+movement*blockWorld.Getcubesize());
+        //移動方向にブロックがあるか
+        if(blockWorld.CheckBlockSelectedPos(movePos)||blockWorld.SnapToGrid(player.GetPosition())==movePos){
+            selectCube = movePos;
+        }
+        camera.Follow(selectCube,dt);
+        camera.FollowRotate(selectCube, 100.0,dt);
+        isBlocksSlectPrev = true;
+    }else{
+        //自分以外のブロックに移動していた場合
+        if(isBlocksSlectPrev){
+            blockWorld.DeleteBlockSelected(player.GetPosition());
+            if(blockWorld.SnapToGrid(player.GetPosition())!=selectCube){
+                blockWorld.DeleteBlockSelected(selectCube);
+                blockWorld.PlaceBlock(player.GetPosition());
+                player.SetPosition(selectCube); 
+            }
+        }
+        isBlocksSlectPrev = false;
+        //カメラ関連
+        camera.Follow(player.GetPosition(),dt);
+        camera.FollowRotate(player.GetPosition(), 100.0,dt);
+        player.MoveWithCameraOrientation(camera,dt);
+        player.Update(dt);
+    }
 
-        //地形の描画
-        shader.setInt("texture1",0);
+    player.Draw(shader);
+    player.TrunBlock(isBlocksSlect,blockWorld,dt);
 
-        blockWorld.DrawAll(shader);
+    //地形の描画
+    shader.setInt("texture1",0);
 
-        //カメラ反映
-        projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        view = camera.GetViewMatrix();
-        shader.setMat4("projection", projection);
-        shader.setMat4("view",view);
+    blockWorld.DrawAll(shader);
+
+    //カメラ反映
+    projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    view = camera.GetViewMatrix();
+    shader.setMat4("projection", projection);
+    shader.setMat4("view",view);
 }
 
 void Game::UpdateEditor(float dt){
+     // ImGuiのデバッグウィンドウを表示
+    ImGui::Begin("Debug");
+        ImGui::Combo("Object Type", &currentTypeIndex, objectTypes, IM_ARRAYSIZE(objectTypes));
+        ImGui::InputInt("Value", &value);
+        ImGui::Text("Selected: %s", objectTypes[currentTypeIndex]);
+        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+    ImGui::End();
     if(Input::IsKeyJustPressed(GLFW_KEY_P)){
         state = GameState::Playing;
     }
+    camera.ProcessEditorMovement(dt);
     shader.use();
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     // 設定した色でカラーバッファ（画面）を実際に塗りつぶしてクリア
@@ -223,13 +270,7 @@ void Game::UpdateEditor(float dt){
     glBindTexture(GL_TEXTURE_2D,texture1);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D,texture2);
-    // ImGuiのデバッグウィンドウを表示
-    ImGui::Begin("Debug");
-    ImGui::Combo("Object Type", &currentTypeIndex, objectTypes, IM_ARRAYSIZE(objectTypes));
-    ImGui::InputInt("Value", &value);
-    ImGui::Text("Selected: %s", objectTypes[currentTypeIndex]);
-    ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-    ImGui::End();
+   
     // ImGui::ShowDemoWindow();
     
     //マウス入力
@@ -247,7 +288,6 @@ void Game::UpdateEditor(float dt){
 
     blockWorld.DrawAll(shader);
 
-    camera.Follow(glm::vec3(0.0f),dt);
     //カメラ反映
     projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     view = camera.GetViewMatrix();

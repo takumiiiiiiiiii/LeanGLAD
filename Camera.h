@@ -20,7 +20,7 @@ enum Camera_Movement {
 // デフォルトの値
 const float YAW         = -90.0f;
 const float PITCH       =  0.0f;
-const float SPEED       =  2.5f;
+const float SPEED       =  4.5f;
 const float SENSITIVITY =  0.1f;
 const float ZOOM        =  45.0f;
 
@@ -55,6 +55,7 @@ class Camera
         glm::mat3 GetNormalMatrix();
         glm::vec3 GetFrontVector();
         void ProcessKeyboard(Camera_Movement direction, float deltaTime);
+        void ProcessEditorMovement(float deltaTime);
         void ProcessMouseMovement(float xoffset,float yoffset);
         void ProcessMouseScroll(float yoffset);
         glm::vec3 CalculateOffset() const;

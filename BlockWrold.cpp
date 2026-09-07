@@ -9,6 +9,12 @@ BlockWorld::BlockWorld(CollisionMesh& collisionMesh, float cubeSize)
     
 }
 
+void BlockWorld::SetCubeTextures(GLuint cubeTexture, GLuint wallTexture)
+{
+    this->cubeTexture = cubeTexture;
+    this->wallTexture = wallTexture;
+}
+
  //ワールド座標をせる座標に
 glm::vec3 BlockWorld::SnapToGrid(const glm::vec3& worldPos)const{
     glm::vec3 cellPos;
@@ -60,8 +66,9 @@ bool BlockWorld::DeleteBlockSelected(const glm::vec3& Pos) {
                     }
                 }
             }
-            // Planeの場合はここで必要に応じて対応可能
-            // TODO: Planeの衝突データ削除対応
+            else if (it->objectType == "Plane") {
+                collisionMesh.removeTrianglesForObject(it->object.get());
+            }
             
             blocks.erase(it);
             return true;
@@ -100,11 +107,18 @@ void BlockWorld::PlaceBlock(const glm::vec3& worldPos, const std::string& object
 
     // objectTypeに基づいて適切なオブジェクトを生成
     if (objectType == "Cube") {
-        auto cube = std::make_unique<Cube>(objectSize);
+        auto cube = std::make_unique<Cube>(objectSize, cubeTexture);
         cube->SetTranformPosition(snapped);
         cube->RegisterCollisionAndStoreIndices(collisionMesh);
         newObject = std::move(cube);
         std::cout << "Cube配置: (" << snapped.x << ", " << snapped.y << ", " << snapped.z 
+                  << ") サイズ: " << objectSize << "\n";
+    }else if(objectType == "Wall" || objectType == "wall"){
+        auto cube = std::make_unique<Cube>(objectSize, wallTexture);
+        cube->SetTranformPosition(snapped);
+        cube->RegisterCollisionAndStoreIndices(collisionMesh);
+        newObject = std::move(cube);
+        std::cout << "wall配置: (" << snapped.x << ", " << snapped.y << ", " << snapped.z 
                   << ") サイズ: " << objectSize << "\n";
     }
     else if (objectType == "Plane") {
@@ -345,11 +359,20 @@ bool BlockWorld::LoadCubeStateFromFile(const std::string& filepath){
             
             // objectTypeに基づいて適切なオブジェクトを生成
             if (blockData.objectType == "Cube") {
-                auto cube = std::make_unique<Cube>(blockData.objectSize);
+                auto cube = std::make_unique<Cube>(blockData.objectSize, cubeTexture);
                 cube->SetTranformPosition(blockData.position);
                 cube->RegisterCollisionAndStoreIndices(collisionMesh);
                 newObject = std::move(cube);
                 std::cout << "  Cube配置: " << blockData.position.x << ", "
+                          << blockData.position.y << ", " << blockData.position.z
+                          << " (サイズ: " << blockData.objectSize << ")\n";
+            }
+            else if (blockData.objectType == "Wall" || blockData.objectType == "wall") {
+                auto cube = std::make_unique<Cube>(blockData.objectSize, wallTexture);
+                cube->SetTranformPosition(blockData.position);
+                cube->RegisterCollisionAndStoreIndices(collisionMesh);
+                newObject = std::move(cube);
+                std::cout << "  Wall配置: " << blockData.position.x << ", "
                           << blockData.position.y << ", " << blockData.position.z
                           << " (サイズ: " << blockData.objectSize << ")\n";
             }

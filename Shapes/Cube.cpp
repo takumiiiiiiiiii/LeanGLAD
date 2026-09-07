@@ -4,8 +4,9 @@
 // 静的メンバ初期化
 uint32_t Cube::nextCubeId = 1;
 
-Cube::Cube(float input_size)
-    : cubeId(nextCubeId++)
+Cube::Cube(float input_size, GLuint textureID)
+        : cubeId(nextCubeId++),
+            textureID(textureID)
 {
    CubeInit(input_size);
 }
@@ -21,6 +22,10 @@ Cube::~Cube()
 void Cube::Draw(Shader& shader)
 {
     shader.setMat4("model", transform.GetModelMatrix());
+    if (textureID != 0) {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+    }
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
@@ -28,6 +33,8 @@ void Cube::Draw(Shader& shader)
 
 void Cube::SetTexture(GLuint textureID)
 {
+    this->textureID = textureID;
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureID);
 }
 

@@ -13,6 +13,9 @@
     void CollisionMesh::addTriangleWithCubeId(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& n, uint32_t cubeId) {
         triangles.push_back({Triangle{v0, v1, v2, n}, cubeId});
     }
+    void CollisionMesh::addTriangleForObject(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& n, const void* object) {
+        triangles.push_back({Triangle{v0, v1, v2, n}, 0, object});
+    }
     bool CollisionMesh::removeCubeById(uint32_t cubeId) {
         if (cubeId == 0) return false;  // ID 0は無効
 
@@ -23,6 +26,15 @@
             }),
             triangles.end());
 
+        return triangles.size() != oldSize;
+    }
+    bool CollisionMesh::removeTrianglesForObject(const void* object) {
+        const auto oldSize = triangles.size();
+        triangles.erase(
+            std::remove_if(triangles.begin(), triangles.end(), [object](const TriangleWithCubeId& tri) {
+                return tri.object == object;
+            }),
+            triangles.end());
         return triangles.size() != oldSize;
     }
     bool CollisionMesh::removeCube(const glm::vec3& center, float size) {

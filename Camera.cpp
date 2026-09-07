@@ -59,8 +59,28 @@ void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime)
         Position += Right * velocity;
 }
 
+void Camera::ProcessEditorMovement(float deltaTime)
+{
+    MoveInput input = Input::GetMoveInput();
+
+    glm::vec3 forward = glm::normalize(Front);
+    glm::vec3 horizontalRight = glm::cross(forward, WorldUp);
+    if (glm::length(horizontalRight) > 0.0f)
+        horizontalRight = glm::normalize(horizontalRight);
+
+    glm::vec3 movement = forward * input.y + horizontalRight * input.x;
+    if (glm::length(movement) > 1.0f)
+        movement = glm::normalize(movement);
+
+    Position += movement * MovementSpeed * deltaTime;
+}
+
 void Camera::ProcessMouseMovement(float xoffset,float yoffset){
-    Yaw   += xoffset;
+    // FrontがFollow系処理などで更新されていても、現在の視線を起点に回転する。
+    Yaw = glm::degrees(std::atan2(Front.z, Front.x));
+    Pitch = glm::degrees(std::asin(glm::clamp(Front.y, -1.0f, 1.0f)));
+
+    Yaw += xoffset;
     Pitch += yoffset;
 
     if(Pitch > 89.0f)
@@ -73,6 +93,8 @@ void Camera::ProcessMouseMovement(float xoffset,float yoffset){
     direction.y = sin(glm::radians(Pitch));
     direction.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
     Front = glm::normalize(direction);
+    Right = glm::normalize(glm::cross(Front, WorldUp));
+    Up = glm::normalize(glm::cross(Right, Front));
 }
 void Camera::ProcessMouseScroll(float yoffset){
     Zoom -= (float)yoffset;

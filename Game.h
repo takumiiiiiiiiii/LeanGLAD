@@ -13,6 +13,8 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
+
 enum class GameState
 {
     Title,
@@ -22,7 +24,7 @@ enum class GameState
     Editor
 };
 // エディター側の状態(グローバル or Editorクラスのメンバ)
-static const char* objectTypes[] = { "Cube", "Plane", "Sphere" }; // 実際の種類名に置き換え
+static const char* objectTypes[] = { "Cube", "Plane", "Wall" }; // 実際の種類名に置き換え
 static int currentTypeIndex = 0;
 static int value = 1;
 

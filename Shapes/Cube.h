@@ -7,7 +7,7 @@ class Shader;
 class Cube : public Object
 {
 public:
-    explicit Cube(float input_size = 1.0f);
+    explicit Cube(float input_size = 1.0f, GLuint textureID = 0);
     ~Cube();
     // 静的なCube ID カウンター
     static uint32_t nextCubeId;
@@ -27,6 +27,7 @@ private:
     GLuint VAO;
     GLuint VBO;
     GLuint EBO;
+    GLuint textureID = 0;
 
     uint32_t cubeId;                       // このCubeの一意なID
     float size = 0;

@@ -28,18 +28,9 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 // キーボード入力を処理する関数（特定のキーが押されたかチェックする）
 void processInput(GLFWwindow *window);
 
-void cursor_enter_callback(GLFWwindow* window, int entered);
-
-//マウスがどんな入力をされたか
-void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
-
 // 画面の初期サイズ（幅と高さ）
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
-
-float lastX = SCR_WIDTH / 2.0f;
-float lastY = SCR_HEIGHT / 2.0f;
-bool firstMouse = true;
 
 //時間
 float deltaTime = 0.0f;	// Time between current frame and last frame
@@ -85,10 +76,6 @@ int main()
 
     // 作成したウィンドウを現在のOpenGL描画対象（コンテキスト）に設定
     glfwMakeContextCurrent(window);
-    //ウィンドウのカーソル入退室記録
-    glfwSetCursorEnterCallback(window, cursor_enter_callback);
-    //カーソル座標をコールバック
-    glfwSetCursorPosCallback(window, mouse_callback);
     Input::SetWindow(window);
     // GLADの初期化。これを行わないと最初のOpenGL関数呼び出しでクラッシュする
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -114,6 +101,8 @@ int main()
 
     Game game;
     game.Initialize();
+    glfwSetWindowUserPointer(window, &game);
+    glfwSetCursorPosCallback(window, mouse_callback);
 
     // GLFWウィンドウ作成後
 
@@ -189,37 +178,6 @@ void processInput(GLFWwindow *window)
         
 }
 
-
-bool cursorInsideWindow = false;
-
-void cursor_enter_callback(GLFWwindow* window, int entered)
-{
-    cursorInsideWindow = entered == GLFW_TRUE;
-}
-
-void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
-{
-    if (!cursorInsideWindow)
-        return;
-    std::cout << "Mouse" << std::endl;
-    float xpos = static_cast<float>(xposIn);
-    float ypos = static_cast<float>(yposIn);
-
-    if (firstMouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
-
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
-
-    lastX = xpos;
-    lastY = ypos;
-
-    //camera.ProcessMouseMovement(xoffset, yoffset);
-}
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {

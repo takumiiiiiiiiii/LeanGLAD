@@ -106,11 +106,12 @@ void Plane::RegisterCollision(CollisionMesh& collision) const
     // indicesを3つずつ読んで三角形として登録
     for (size_t i = 0; i + 2 < indices.size(); i += 3) {
 
-        collision.addTriangle(
+        collision.addTriangleForObject(
             worldPositions[indices[i]],
             worldPositions[indices[i + 1]],
             worldPositions[indices[i + 2]],
-            normals[indices[i]]
+            normals[indices[i]],
+            this
         );
     }
 }

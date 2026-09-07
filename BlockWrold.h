@@ -26,6 +26,8 @@ class BlockWorld
 public:
     explicit BlockWorld(CollisionMesh& collisionMesh, float cubeSize = 1.0f);
 
+    void SetCubeTextures(GLuint cubeTexture, GLuint wallTexture);
+
     // worldPosにオブジェクトを配置する（objectTypeとsizeで種類とサイズを指定）
     // @param worldPos ワールド座標
     // @param objectType オブジェクト種類（"Cube"、"Plane"など）
@@ -67,6 +69,8 @@ private:
     CollisionMesh& collisionMesh;
     float cubeSize;
     std::vector<PlacedBlock> blocks;
+    GLuint cubeTexture = 0;
+    GLuint wallTexture = 0;
     //ファイルの列数
     int expectedColumnCount = 6; // PlacedBlockの列数: x, y, z, objectType, size, isShown
 };
