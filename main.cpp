@@ -96,13 +96,13 @@ int main()
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     ImGui::StyleColorsDark();
+    glfwSetCursorPosCallback(window, mouse_callback);
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
     Game game;
     game.Initialize();
     glfwSetWindowUserPointer(window, &game);
-    glfwSetCursorPosCallback(window, mouse_callback);
 
     // GLFWウィンドウ作成後
 
@@ -110,14 +110,13 @@ int main()
     // ウィンドウが閉じられる指示が出るまで、メインループを繰り返す
     while (!glfwWindowShouldClose(window))
     {
+        glfwPollEvents();
+
         // ImGUIの新しいフレームを開始
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
- 
-
-        // ★フレームの最初に必ずUpdateを呼び出す
         Input::Update();
         // エスケープキーなどの入力入力を監視・処理
         processInput(window);
@@ -138,8 +137,6 @@ int main()
 
         // カラーバッファを入れ替えて、描画した内容を実際に画面に表示（ダブルバッファリング）
         glfwSwapBuffers(window);
-        // キーボードやマウスの操作などのイベントを検知・処理
-        glfwPollEvents();
     }
 
     // optional: de-allocate all resources once they've outlived their purpose:

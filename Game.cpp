@@ -28,6 +28,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
     float ypos = static_cast<float>(yposIn);
 
     if (firstMouse)
+    {
         lastX = xpos;
         lastY = ypos;
         firstMouse = false;
@@ -251,10 +252,10 @@ void Game::UpdatePlaying(float dt){
 void Game::UpdateEditor(float dt){
      // ImGuiのデバッグウィンドウを表示
     ImGui::Begin("Debug");
-        ImGui::Combo("Object Type", &currentTypeIndex, objectTypes, IM_ARRAYSIZE(objectTypes));
-        ImGui::InputInt("Value", &value);
-        ImGui::Text("Selected: %s", objectTypes[currentTypeIndex]);
-        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+    ImGui::Combo("Object Type", &currentTypeIndex, objectTypes, IM_ARRAYSIZE(objectTypes));
+    ImGui::InputInt("Value", &value);
+    ImGui::Text("Selected: %s", objectTypes[currentTypeIndex]);
+    ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
     ImGui::End();
     if(Input::IsKeyJustPressed(GLFW_KEY_P)){
         state = GameState::Playing;
@@ -296,7 +297,12 @@ void Game::UpdateEditor(float dt){
 
 }
 void Game::RemoveBlockByMouse(){
-    if (Input::IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_RIGHT)){
+    if (ImGui::GetIO().WantCaptureMouse ||
+        !Input::IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_RIGHT))
+    {
+        return;
+    }
+
             double mx, my;
             Input::GetMousePosition(mx, my);
 
@@ -326,12 +332,15 @@ void Game::RemoveBlockByMouse(){
                 std::cout << "delete result="
                           << blockWorld.DeleteBlockSelected(deletePos) << std::endl;
             }
-        }
 }
 
 void Game::PlaceBlockByMouse(){
-    if (Input::IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_LEFT))
+    if (ImGui::GetIO().WantCaptureMouse ||
+        !Input::IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_LEFT))
     {
+        return;
+    }
+
         double mx, my;
         Input::GetMousePosition(mx, my);
 
@@ -360,5 +369,4 @@ void Game::PlaceBlockByMouse(){
             // PlaceObject(hitPos); // ここで実際にオブジェクトを生成・配置する
             blockWorld.PlaceBlock(placePos, objectTypes[currentTypeIndex], value); // ここで実際にオブジェクトを生成・配置する
         }
-    }
 }
