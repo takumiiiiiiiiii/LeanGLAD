@@ -38,16 +38,17 @@ public:
 
     void DrawAll(Shader& shader);
 
-    //ワールド座標をせる座標に
+    //ワールド座標をセル座標に
     glm::vec3 SnapToGrid(const glm::vec3& worldPos)const;
     //選択した座標にブロックが存在するか
     bool CheckBlockSelectedPos(const glm::vec3& Pos)const;
-
+    //ブロックの座標を取得
     bool GetBlockPosition(const glm::vec3& pos,glm::vec3& blockPosition)const;
     //座標のブロックを削除
     bool DeleteBlockSelected(const glm::vec3& Pos,const std::string& objectName);
-
+    //ファイルにブロックを収納
     bool SaveToFile(const std::string& filepath,const std::string& filename) const;
+    //キューブのサイズを取得
     float Getcubesize() {return cubeSize;};
 
     glm::vec3 parseLine (const std::string& line, std::size_t lineNumber) const;

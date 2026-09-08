@@ -3,6 +3,8 @@ Camera::Camera(glm::vec3 position,glm::vec3 up,float yaw,float pitch)
       : Front(glm::vec3(0.0f, 0.0f, -1.0f)),
       MovementSpeed(SPEED),
       MouseSensitivity(SENSITIVITY),
+      MousePanSensitivity(PANSITIVITY),
+      MouseForwardSensitivity(FORWARDENSITIVITY),
       Zoom(ZOOM)
 {
     Position = position;
@@ -96,6 +98,26 @@ void Camera::ProcessMouseMovement(float xoffset,float yoffset){
     Right = glm::normalize(glm::cross(Front, WorldUp));
     Up = glm::normalize(glm::cross(Right, Front));
 }
+
+void Camera::ProcessMousePan(float xoffset, float yoffset)
+{
+    constexpr float PanSpeed = 0.01f;
+
+    // 横方向：カメラのRight方向
+    Position += Right * xoffset * PanSpeed;
+
+    // 縦方向：画面上方向を正とする
+    Position -= Up * yoffset * PanSpeed;
+}
+
+void Camera::ProcessMouseForward(float yoffset)
+{
+    constexpr float MoveSpeed = 0.5f;
+
+    // スクロール上で前進、下で後退
+    Position += Front * yoffset * MoveSpeed;
+}
+
 void Camera::ProcessMouseScroll(float yoffset){
     Zoom -= (float)yoffset;
     if (Zoom < 1.0f)

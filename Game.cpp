@@ -14,36 +14,46 @@ namespace
     bool firstMouse = true;
 }
 
-void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
     Game* game = static_cast<Game*>(glfwGetWindowUserPointer(window));
-    if (game == nullptr || game->state != GameState::Editor ||
-        glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) != GLFW_PRESS)
-    {
-        firstMouse = true;
-        return;
-    }
+    static double lastX = xpos;
+    static double lastY = ypos;
 
-    float xpos = static_cast<float>(xposIn);
-    float ypos = static_cast<float>(yposIn);
-
-    if (firstMouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
-
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos;
+    float xoffset = static_cast<float>(xpos - lastX);
+    float yoffset = static_cast<float>(ypos - lastY);
 
     lastX = xpos;
     lastY = ypos;
 
-    game->camera.ProcessMouseMovement(
-        xoffset * game->camera.MouseSensitivity,
-        yoffset * game->camera.MouseSensitivity
-    );
+    // game->camera.ProcessMouseMovement(
+    //         xoffset * game->camera.MouseSensitivity,
+    //         yoffset * game->camera.MouseSensitivity
+    //     );
+    if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT)){
+        game->camera.ProcessMouseMovement(
+            xoffset * game->camera.MouseSensitivity,
+            -yoffset * game->camera.MouseSensitivity
+        );
+    }
+    if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE)){
+        game->camera.ProcessMousePan(
+            -xoffset * game->camera.MousePanSensitivity,
+            -yoffset * game->camera.MousePanSensitivity
+        );
+    }
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    Game* game = static_cast<Game*>(glfwGetWindowUserPointer(window));
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
+    {
+       
+    }
+     game->camera.ProcessMouseForward(
+            yoffset*game->camera.MouseForwardSensitivity
+        );
 }
 
 
@@ -264,7 +274,6 @@ void Game::UpdateEditor(float dt){
     if(Input::IsKeyJustPressed(GLFW_KEY_P)){
         state = GameState::Playing;
     }
-    camera.ProcessEditorMovement(dt);
     shader.use();
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     // 設定した色でカラーバッファ（画面）を実際に塗りつぶしてクリア

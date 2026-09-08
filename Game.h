@@ -14,8 +14,8 @@
 #include "imgui_impl_opengl3.h"
 #include "global.h"
 #include "StageEditor.h"
-void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
-
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xpos, double ypos);
 enum class GameState
 {
     Title,

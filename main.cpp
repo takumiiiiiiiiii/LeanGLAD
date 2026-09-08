@@ -94,6 +94,7 @@ int main()
     ImGuiIO& io = ImGui::GetIO();
     ImGui::StyleColorsDark();
     glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
@@ -172,11 +173,6 @@ void processInput(GLFWwindow *window)
         
 }
 
-
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-    
-}
 
 
 

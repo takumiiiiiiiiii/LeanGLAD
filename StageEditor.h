@@ -10,6 +10,7 @@
 #include "imgui_impl_opengl3.h"
 #include "BlockWrold.h"
 #include "global.h"
+
 static const char* objectTypes[] = { "Cube", "Plane", "Wall" }; // 実際の種類名に置き換え
 static const char* editorStates[] = { "Place", "Remove", "Select" };
 // エディター側の状態(グローバル or Editorクラスのメンバ)
@@ -20,6 +21,7 @@ class StageEditor {
     void PlaceBlockByMouse(CollisionMesh& collisionmesh, BlockWorld& blockWorld, const glm::mat4& view, const glm::mat4& projection);
     void RemoveBlockByMouse(CollisionMesh& collisionmesh, BlockWorld& blockWorld, const glm::mat4& view, const glm::mat4& projection);
     void SelectBlockByMouse(CollisionMesh& collisionmesh, BlockWorld& blockWorld, const glm::mat4& view, const glm::mat4& projection);
+    PlacedBlock* selectBlock;
     private:
     int currentTypeIndex = 0;
     int currentStateIndex = 0;

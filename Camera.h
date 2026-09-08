@@ -22,6 +22,8 @@ const float YAW         = -90.0f;
 const float PITCH       =  0.0f;
 const float SPEED       =  4.5f;
 const float SENSITIVITY =  0.1f;
+const float PANSITIVITY =  1.0f;
+const float FORWARDENSITIVITY  = 1.0f;
 const float ZOOM        =  45.0f;
 
 //-----------------------------------
@@ -45,6 +47,8 @@ class Camera
         //camera options 
         float MovementSpeed;
         float MouseSensitivity;
+        float MousePanSensitivity;
+        float MouseForwardSensitivity;
         float Zoom;
         //フォロー用の距離と高さの設定
         float FollowDistance = 10.0f;
@@ -57,12 +61,14 @@ class Camera
         void ProcessKeyboard(Camera_Movement direction, float deltaTime);
         void ProcessEditorMovement(float deltaTime);
         void ProcessMouseMovement(float xoffset,float yoffset);
+        void ProcessMousePan(float xoffset, float yoffset);
+        void ProcessMouseForward(float yoffset);
         void ProcessMouseScroll(float yoffset);
         glm::vec3 CalculateOffset() const;
         void UpdateCameraVectors(const glm::vec3& offset);
         void Follow(const glm::vec3& target, float dt);
         void FollowRotate(const glm::vec3& target,float Rotate_speed,float dt);
-        
+
     private:
         glm::vec3 smoothedTarget = glm::vec3(0.0f); // 遅れを含んだ注視点
         bool isInitialized = false;                 // 初回フレーム判定用
