@@ -271,6 +271,7 @@ void Game::UpdateEditor(float dt){
     stageEditor.UpdateEditor(dt);
     stageEditor.PlaceBlockByMouse(collisionmesh,blockWorld,view,projection);
     stageEditor.RemoveBlockByMouse(collisionmesh,blockWorld,view,projection);
+    stageEditor.SelectBlockByMouse(collisionmesh,blockWorld,view,projection);
     if(Input::IsKeyJustPressed(GLFW_KEY_P)){
         state = GameState::Playing;
     }

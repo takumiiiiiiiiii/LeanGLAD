@@ -99,6 +99,18 @@ bool BlockWorld::DeleteBlockSelected(
     return deleted;
 }
 
+ PlacedBlock*  BlockWorld::GetBlockSelected(const glm::vec3& Pos){
+    const glm::vec3 cellPos = SnapToGrid(Pos);
+    for (auto& block : blocks)
+    {
+        if (SnapToGrid(block.position) == cellPos)
+        {
+            return &block;
+        }
+    }
+    return nullptr;
+ }
+
 bool BlockWorld::IsOccupied(const glm::vec3& worldPos) const
 {
     // キューブサイズの1割程度を許容誤差として、同じセルへの重複配置を防ぐ
@@ -175,9 +187,11 @@ bool BlockWorld::SaveToFile(const std::string& filepath,const std::string& filen
         // 拡張フォーマット: x,y,z,objectType,size
         for (const auto& p : blocks)
         {
-            ofs << p.position.x << ","
-                << p.position.y << ","
-                << p.position.z << ","
+            glm::vec3 objPos = p.object->GetTransform().GetPosition();
+            glm::vec3 objCale = p.object->GetTransform().GetScale();
+            ofs << objPos.x << ","
+                << objPos.y << ","
+                << objPos.z << ","
                 << p.objectType << ","
                 << std::fixed << std::setprecision(2) << p.objectSize << "," 
                 << (p.isShown ? "true" : "false")

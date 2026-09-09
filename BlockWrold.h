@@ -46,6 +46,8 @@ public:
     bool GetBlockPosition(const glm::vec3& pos,glm::vec3& blockPosition)const;
     //座標のブロックを削除
     bool DeleteBlockSelected(const glm::vec3& Pos,const std::string& objectName);
+    //座標のブロックを取得
+    PlacedBlock* GetBlockSelected(const glm::vec3& Pos);
     //ファイルにブロックを収納
     bool SaveToFile(const std::string& filepath,const std::string& filename) const;
     //キューブのサイズを取得
