@@ -48,8 +48,6 @@ void Player::Draw(Shader& shader)
 }
 
 
-
-
 //カメラ向きを基準に移動
 void Player::MoveWithCameraOrientation(Camera& camera, float deltaTime)
 {

@@ -59,7 +59,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 
 Game::Game()
     : state(GameState::Title),
-      player(collisionmesh,Transform(), 0.8f),
+      player(collisionmesh,Transform(), 1.0f),
 
       blockWorld(collisionmesh,1.0),
     shader(
