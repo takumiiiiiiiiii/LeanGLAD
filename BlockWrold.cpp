@@ -195,14 +195,15 @@ bool BlockWorld::SaveToFile(const std::string& filepath,const std::string& filen
         {
             const glm::vec3 objPos =
                 p.object->GetTransform().GetPosition();
-
+            const glm::vec3 objSize =
+                p.object->GetTransform().GetScale();
             ofs << objPos.x << ","
                 << objPos.y << ","
                 << objPos.z << ","
                 << p.objectType << ","
-                << p.objectSize.x << ","
-                << p.objectSize.y << ","
-                << p.objectSize.z << ","
+                << objSize.x << ","
+                << objSize.y << ","
+                << objSize.z << ","
                 << (p.isShown ? "true" : "false")
                 << "\n";
         }
