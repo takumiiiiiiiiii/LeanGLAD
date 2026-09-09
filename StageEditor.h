@@ -25,5 +25,5 @@ class StageEditor {
     private:
     int currentTypeIndex = 0;
     int currentStateIndex = 0;
-    int value = 1;
+    glm::vec3 value = {1.0f,1.0f,1.0f};
 };

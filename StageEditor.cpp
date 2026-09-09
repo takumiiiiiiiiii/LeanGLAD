@@ -9,7 +9,6 @@ StageEditor::StageEditor()
     // コンストラクタの実装（必要に応じて）
     currentTypeIndex = 0;
     currentStateIndex = 0;
-    value = 1;
     editorStates[currentStateIndex];
 
 }
@@ -40,7 +39,7 @@ void StageEditor::UpdateEditor(float dt) {
             ImGui::Text("No block selected");
         }
     }
-    ImGui::InputInt("Value", &value);
+    ImGui::InputFloat3("Value", &value.x);
     ImGui::Text("Selected: %s", objectTypes[currentTypeIndex]);
     ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
     ImGui::End();

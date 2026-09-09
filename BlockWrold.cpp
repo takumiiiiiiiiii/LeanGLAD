@@ -123,57 +123,63 @@ bool BlockWorld::IsOccupied(const glm::vec3& worldPos) const
     return false;
 }
 
-void BlockWorld::PlaceBlock(const glm::vec3& worldPos, const std::string& objectType, float objectSize, bool isShown)
+// ...existing code...
+
+void BlockWorld::PlaceBlock(
+    const glm::vec3& worldPos,
+    const std::string& objectType,
+    const glm::vec3& objectSize,
+    bool isShown)
 {
-    // セルインデックスをfloorで求め、そのセルの中心(index + 0.5)*cubeSizeにスナップする。
-    // Cubeは中心基準(-0.5〜+0.5)なので、中心をセル境界の真ん中に合わせる必要がある。
-    // truncではなくfloorを使うことで、負の座標側でもズレなく動作する。
-    glm::vec3 snapped;
-    snapped.x = (std::floor(worldPos.x / cubeSize) + 0.5f) * cubeSize;
-    snapped.y = (std::floor(worldPos.y / cubeSize) + 0.5f) * cubeSize;
-    snapped.z = (std::floor(worldPos.z / cubeSize) + 0.5f) * cubeSize;
+    glm::vec3 snapped = SnapToGrid(worldPos);
 
     if (IsOccupied(snapped))
         return;
 
     std::unique_ptr<Object> newObject;
 
-    // objectTypeに基づいて適切なオブジェクトを生成
     if (objectType == "Cube") {
-        auto cube = std::make_unique<Cube>(objectSize, cubeTexture);
+        auto cube = std::make_unique<Cube>(1.0, cubeTexture);
         cube->SetTranformPosition(snapped);
+        cube->GetTransform().SetScale(objectSize);
         cube->RegisterCollisionAndStoreIndices(collisionMesh);
         newObject = std::move(cube);
-        std::cout << "Cube配置: (" << snapped.x << ", " << snapped.y << ", " << snapped.z 
-                  << ") サイズ: " << objectSize << "\n";
-    }else if(objectType == "Wall" || objectType == "wall"){
-        auto cube = std::make_unique<Cube>(objectSize, wallTexture);
+    }
+    else if (objectType == "Wall" || objectType == "wall") {
+        auto cube = std::make_unique<Cube>(1.0, wallTexture);
         cube->SetTranformPosition(snapped);
+        cube->GetTransform().SetScale(objectSize);
         cube->RegisterCollisionAndStoreIndices(collisionMesh);
         newObject = std::move(cube);
-        std::cout << "wall配置: (" << snapped.x << ", " << snapped.y << ", " << snapped.z 
-                  << ") サイズ: " << objectSize << "\n";
     }
     else if (objectType == "Plane") {
-        auto plane = std::make_unique<Plane>(objectSize);
-        snapped.y -= 0.5f * objectSize; // Planeの中心を下げる
+        auto plane = std::make_unique<Plane>(1.0);
+        snapped.y -= 0.5f * objectSize.y;
         plane->GetTransform().SetPosition(snapped);
+        plane->GetTransform().SetScale(objectSize);
         plane->RegisterCollision(collisionMesh);
         newObject = std::move(plane);
-        std::cout << "Plane配置: (" << snapped.x << ", " << snapped.y << ", " << snapped.z 
-                  << ") サイズ: " << objectSize << "\n";
     }
     else {
-        std::cerr << "警告: 未対応のオブジェクト種類です: " << objectType << "\n";
+        std::cerr << "警告: 未対応のオブジェクト種類です: "
+                  << objectType << "\n";
         return;
     }
 
-    blocks.push_back(PlacedBlock{ snapped, objectType, objectSize, std::move(newObject), isShown });
+    blocks.push_back(PlacedBlock{
+        snapped,
+        objectType,
+        objectSize,
+        std::move(newObject),
+        isShown
+    });
 }
+
+
 
 bool BlockWorld::SaveToFile(const std::string& filepath,const std::string& filename) const
 {
-    std::ofstream ofs;
+   std::ofstream ofs;
  
     // 失敗時に例外を投げるよう設定 (failbit / badbit)
     ofs.exceptions(std::ofstream::failbit | std::ofstream::badbit);
@@ -187,17 +193,19 @@ bool BlockWorld::SaveToFile(const std::string& filepath,const std::string& filen
         // 拡張フォーマット: x,y,z,objectType,size
         for (const auto& p : blocks)
         {
-            glm::vec3 objPos = p.object->GetTransform().GetPosition();
-            glm::vec3 objCale = p.object->GetTransform().GetScale();
+            const glm::vec3 objPos =
+                p.object->GetTransform().GetPosition();
+
             ofs << objPos.x << ","
                 << objPos.y << ","
                 << objPos.z << ","
                 << p.objectType << ","
-                << std::fixed << std::setprecision(2) << p.objectSize << "," 
+                << p.objectSize.x << ","
+                << p.objectSize.y << ","
+                << p.objectSize.z << ","
                 << (p.isShown ? "true" : "false")
                 << "\n";
         }
- 
         ofs.close();
         std::cout << "書き込み成功: " << filepath << " (" << blocks.size() << " 件)\n";
     }
@@ -265,10 +273,12 @@ BlockWorld::ParsedBlockData BlockWorld::parseBlockLine(const std::string& line, 
         tokens.push_back(token);
     }
  
+
     if (tokens.size() != expectedColumnCount) {
         throw std::runtime_error(
             "列数が不正です (行 " + std::to_string(lineNumber) +
-            ", 期待値: " + std::to_string(expectedColumnCount) + ", 実際: " + std::to_string(tokens.size()) + ")");
+            ", 期待値: " + std::to_string(expectedColumnCount) +
+            ", 実際: " + std::to_string(tokens.size()) + ")");
     }
  
     try {
@@ -291,14 +301,23 @@ BlockWorld::ParsedBlockData BlockWorld::parseBlockLine(const std::string& line, 
         std::string objectType = tokens[3];
         
         // size をパース
-        float size = std::stof(tokens[4], &pos);
+        float sizeX = std::stof(tokens[4], &pos);
         if (pos != tokens[4].size()) {
             throw std::invalid_argument("余分な文字が含まれています");
         }
 
+        float sizeY = std::stof(tokens[5], &pos);
+        if (pos != tokens[5].size()) {
+            throw std::invalid_argument("余分な文字が含まれています");
+        }
+
+        float sizeZ = std::stof(tokens[6], &pos);
+        if (pos != tokens[6].size()) {
+            throw std::invalid_argument("余分な文字が含まれています");
+        }
         // isShown をパース
         bool isShown = true; // デフォルト値
-        std::string isShownStr = tokens[5];
+        std::string isShownStr = tokens[7];
         if (isShownStr == "true" || isShownStr == "1") {
             isShown = true;
         } else if (isShownStr == "false" || isShownStr == "0") {
@@ -307,7 +326,7 @@ BlockWorld::ParsedBlockData BlockWorld::parseBlockLine(const std::string& line, 
             throw std::invalid_argument("isShown は true/false または 1/0 で指定してください");
         }
         
-        return ParsedBlockData{ glm::vec3{x, y, z}, objectType, size, isShown };
+        return ParsedBlockData{ glm::vec3{x, y, z}, objectType,glm::vec3{sizeX,sizeY,sizeZ}, isShown };
     }
     catch (const std::invalid_argument& e) {
         throw std::runtime_error(
@@ -381,49 +400,55 @@ std::vector<BlockWorld::ParsedBlockData> BlockWorld::readBlockDataFromFile(const
     return blockData;
 }
 
-bool BlockWorld::LoadCubeStateFromFile(const std::string& filepath){
-    
+bool BlockWorld::LoadCubeStateFromFile(const std::string& filepath)
+{
     try {
-        // 拡張フォーマットを読み込む
-        std::vector<ParsedBlockData> blockDataList = readBlockDataFromFile(filepath);
-        
-        std::cout << "読み込み成功: " << blockDataList.size() << " 個のオブジェクト\n";
-        
+        const std::vector<ParsedBlockData> blockDataList =
+            readBlockDataFromFile(filepath);
+
+        std::cout << "読み込み成功: "
+                  << blockDataList.size()
+                  << " 個のオブジェクト\n";
+
         for (const auto& blockData : blockDataList) {
             std::unique_ptr<Object> newObject;
-            
-            // objectTypeに基づいて適切なオブジェクトを生成
+
             if (blockData.objectType == "Cube") {
-                auto cube = std::make_unique<Cube>(blockData.objectSize, cubeTexture);
+                auto cube = std::make_unique<Cube>(
+                    1.0, cubeTexture);
+
                 cube->SetTranformPosition(blockData.position);
+                cube->GetTransform().SetScale(blockData.objectSize);
                 cube->RegisterCollisionAndStoreIndices(collisionMesh);
+                
                 newObject = std::move(cube);
-                std::cout << "  Cube配置: " << blockData.position.x << ", "
-                          << blockData.position.y << ", " << blockData.position.z
-                          << " (サイズ: " << blockData.objectSize << ")\n";
             }
-            else if (blockData.objectType == "Wall" || blockData.objectType == "wall") {
-                auto cube = std::make_unique<Cube>(blockData.objectSize, wallTexture);
-                cube->SetTranformPosition(blockData.position);
-                cube->RegisterCollisionAndStoreIndices(collisionMesh);
-                newObject = std::move(cube);
-                std::cout << "  Wall配置: " << blockData.position.x << ", "
-                          << blockData.position.y << ", " << blockData.position.z
-                          << " (サイズ: " << blockData.objectSize << ")\n";
+            else if (blockData.objectType == "Wall" ||
+                     blockData.objectType == "wall") {
+                auto wall = std::make_unique<Cube>(
+                    1.0, wallTexture);
+
+                wall->SetTranformPosition(blockData.position);
+                wall->GetTransform().SetScale(blockData.objectSize);
+                wall->RegisterCollisionAndStoreIndices(collisionMesh);
+
+                newObject = std::move(wall);
             }
             else if (blockData.objectType == "Plane") {
-                auto plane = std::make_unique<Plane>(blockData.objectSize);
+                auto plane = std::make_unique<Plane>(
+                    1.0);
+
                 plane->GetTransform().SetPosition(blockData.position);
+                plane->GetTransform().SetScale(blockData.objectSize);
                 plane->RegisterCollision(collisionMesh);
                 newObject = std::move(plane);
-                std::cout << "  Plane配置: " << blockData.position.x << ", "
-                          << blockData.position.y << ", " << blockData.position.z
-                          << " (サイズ: " << blockData.objectSize << ")\n";
             }
             else {
-                std::cerr << "警告: 未対応のオブジェクト種類です: " << blockData.objectType << "\n";
+                std::cerr << "警告: 未対応のオブジェクト種類です: "
+                          << blockData.objectType << "\n";
                 continue;
             }
+
             blocks.push_back(PlacedBlock{
                 blockData.position,
                 blockData.objectType,
@@ -431,12 +456,24 @@ bool BlockWorld::LoadCubeStateFromFile(const std::string& filepath){
                 std::move(newObject),
                 blockData.isShown
             });
+
+            std::cout << "  " << blockData.objectType
+                      << "配置: (" << blockData.position.x << ", "
+                      << blockData.position.y << ", "
+                      << blockData.position.z << ")"
+                      << " サイズ: (" << blockData.objectSize.x << ", "
+                      << blockData.objectSize.y << ", "
+                      << blockData.objectSize.z << ")"
+                      << " 表示: "
+                      << (blockData.isShown ? "true" : "false")
+                      << "\n";
         }
-        
+
         return true;
     }
     catch (const std::exception& e) {
-        std::cerr << "ファイル読み込みエラー: " << e.what() << "\n";
+        std::cerr << "ファイル読み込みエラー: "
+                  << e.what() << "\n";
         return false;
     }
 }

@@ -12,13 +12,12 @@ class Shader;
 class Object;
 
 // 配置済みブロック1個分の情報(位置、種類、サイズ、Objectの実体をまとめて保持)
-struct PlacedBlock
-{
+struct PlacedBlock {
     glm::vec3 position;
-    std::string objectType;  // "Cube", "Plane" など
-    float objectSize;        // オブジェクトのサイズ
-    std::unique_ptr<class Object> object;  // CubeやPlaneなどの基底クラス
-    bool isShown = true; // 描画するかどうかのフラグ
+    std::string objectType;
+    glm::vec3 objectSize;
+    std::unique_ptr<Object> object;
+    bool isShown;
 };
 
 
@@ -34,7 +33,12 @@ public:
     // @param objectType オブジェクト種類（"Cube"、"Plane"など）
     // @param objectSize オブジェクトのサイズ（デフォルト: 1.0f）
     // @param isShown 描画するかどうかのフラグ（デフォルト: true）
-    void PlaceBlock(const glm::vec3& worldPos, const std::string& objectType = "Cube", float objectSize = 1.0f, bool isShown = true);
+    void PlaceBlock(
+        const glm::vec3& worldPos,
+        const std::string& objectType = "Cube",
+        const glm::vec3& objectSize = {1.0,1.0,1.0},
+        bool isShown = true
+    );
 
     void DrawAll(Shader& shader);
 
@@ -60,8 +64,8 @@ public:
     struct ParsedBlockData {
         glm::vec3 position;
         std::string objectType;
-        float objectSize;
-        bool isShown = true; // 描画するかどうかのフラグ
+        glm::vec3 objectSize;
+        bool isShown = true;
     };
     ParsedBlockData parseBlockLine(const std::string& line, std::size_t lineNumber) const;
     std::vector<ParsedBlockData> readBlockDataFromFile(const std::string& filepath) const;
@@ -76,5 +80,5 @@ private:
     GLuint cubeTexture = 0;
     GLuint wallTexture = 0;
     //ファイルの列数
-    int expectedColumnCount = 6; // PlacedBlockの列数: x, y, z, objectType, size, isShown
+    int expectedColumnCount = 8; // PlacedBlockの列数: x, y, z, objectType, size, isShown
 };
