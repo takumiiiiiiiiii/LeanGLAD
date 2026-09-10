@@ -42,6 +42,7 @@ public:
     glm::vec3 GetPosition() const;
     void SetPosition(const glm::vec3& pos);
     void SetMoveSpeed(float speed);
+    void SetTexture(GLuint id);
 
 
 

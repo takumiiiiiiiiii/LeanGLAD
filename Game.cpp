@@ -1,6 +1,5 @@
 #include "Game.h"
 #include "Shader.h"
-#include "stb_image.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -71,55 +70,25 @@ Game::Game()
 
 void Game::Initialize()
 {
+    // ★ アルファブレンディングを有効化
+    glEnable(GL_BLEND);
+    // 重なり合った際の色の計算方法を指定 (前景色のAlpha値で合成)
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     player.SetPosition(glm::vec3{0.0,2.0,0.0});
+
     // //シェーダーの作成
     // shader = Shader("../Shaders/VertexShader.SHADER", "../Shaders/FragmentShader.SHADER");
-    //テクスチャの作成
-    //texture1
-    glGenTextures(1,&texture1);
-    glBindTexture(GL_TEXTURE_2D,texture1);
-    //テクスチャ初期設定
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);//STはxとy軸
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-    //stbによるテクスチャ画像読み込み
-    int width,height,nrChannles;
-    unsigned char*data = stbi_load("../Textures/NormalBox.png",&width,&height,&nrChannles,0);
-    if(data)
-    {
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }else{
-        std::cout<<"Failed to load texture"<< std::endl;
-    }
-    stbi_image_free(data);
-    //texture2
-    glGenTextures(1,&texture2);
-    glBindTexture(GL_TEXTURE_2D,texture2);
-    //テクスチャ初期設定
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);//STはxとy軸
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-    //stbによるテクスチャ画像読み込み
-    stbi_set_flip_vertically_on_load(true);
-    data = stbi_load("../Textures/wall.png",&width,&height,&nrChannles,0);
-    if(data)
-    {
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }else{
-        std::cout<<"Failed to load texture"<< std::endl;
-    }
+    // ★ OpenGL初期化完了後にテクスチャを読み込む
+    cubeTexture = std::make_unique<Texture>("../Textures/NormalBox.png");
+    wallTexture = std::make_unique<Texture>("../Textures/wall.png");
+    logoTexture = std::make_unique<Texture>("../Textures/title.png");
 
-    stbi_image_free(data);
-
-    blockWorld.SetCubeTextures(texture1, texture2);
+    blockWorld.SetCubeTextures(cubeTexture->GetID(),wallTexture->GetID());
     shader.use();
     shader.setInt("texture1",0);
     shader.setInt("texture2",1);
+    player.SetTexture(cubeTexture->GetID());
     //床初期化
     // plane.GetTransform().SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
     //床のコリジョンを設定
@@ -160,6 +129,30 @@ void Game::UpdateTitle(float dt){
     if(Input::IsKeyJustPressed(GLFW_KEY_E)){
         state = GameState::Editor;
     }
+    shader.use();
+
+    // 画面をクリアするときの背景色を設定（暗い青緑色）
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    // 設定した色でカラーバッファ（画面）を実際に塗りつぶしてクリア
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    Cube title(1.0,logoTexture->GetID());
+    // テクスチャの幅と高さを取得
+    float imgWidth  = static_cast<float>(logoTexture->GetWidth());
+    float imgHeight = static_cast<float>(logoTexture->GetHeight())*1.3;
+
+    // アスペクト比（幅 ÷ 高さ）を計算
+    float aspectRatio = imgWidth / imgHeight;
+
+    // 基準となるサイズを決定（例: 高さを 2.0 に固定する場合）
+    float targetHeight = 0.9f;
+    float targetWidth  = targetHeight * aspectRatio; // 比率に合わせて幅を決定
+
+    // スケールを設定（Z軸は平面描画のため 1.0f）
+    title.SetScale({ targetWidth, targetHeight, 1.0f });
+    title.SetTranformPosition({0.0,0.5,0.0});
+    title.Draw(shader);
+    shader.setMat4("projection", 1);
+    shader.setMat4("view",1);
 }
 
 void Game::UpdatePlaying(float dt){
@@ -184,11 +177,7 @@ void Game::UpdatePlaying(float dt){
     // 設定した色でカラーバッファ（画面）を実際に塗りつぶしてクリア
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     //色を変更
-    //テクスチャを使用
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D,texture1);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D,texture2);
+
     if(isBlocksSlect){
         if(!isBlocksSlectPrev){
             blockWorld.PlaceBlock(blockWorld.SnapToGrid(selectCube), "Cube", {1.0,1.0,1.0}, false);
@@ -249,6 +238,7 @@ void Game::UpdatePlaying(float dt){
 
     //地形の描画
     shader.setInt("texture1",0);
+    
 
     blockWorld.DrawAll(shader);
 
@@ -271,14 +261,7 @@ void Game::UpdateEditor(float dt){
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     // 設定した色でカラーバッファ（画面）を実際に塗りつぶしてクリア
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //色を変更
-    //テクスチャを使用
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D,texture1);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D,texture2);
-    
-    // ImGui::ShowDemoWindow();
+
     
     //マウス入力
      if(Input::IsKeyPressed(GLFW_KEY_Z)){

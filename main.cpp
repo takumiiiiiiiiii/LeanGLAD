@@ -1,5 +1,4 @@
 #define GL_SILENCE_DEPRECATION
-#define STB_IMAGE_IMPLEMENTATION
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -8,7 +7,6 @@
 
 #include <iostream>
 #include "Shader.h"
-#include "stb_image.h"
 #include "Camera.h"
 #include "Entity/Player.h"
 #include "Objects.h"

@@ -40,6 +40,7 @@ add_executable(OpenGLTest
     Entity/PlayerManager.cpp
     StageEditor.h
     StageEditor.cpp
+    Texture.cpp
     ${IMGUI_DIR}/imgui.cpp
     ${IMGUI_DIR}/imgui_draw.cpp
     ${IMGUI_DIR}/imgui_tables.cpp

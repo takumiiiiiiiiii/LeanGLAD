@@ -150,6 +150,9 @@ glm::vec3 Player::GetPosition() const
     return transform.GetPosition();
 }
 
+void Player::SetTexture(GLuint id){
+    cube.SetTexture(id);
+}
 //地面チェック
 GroundHitInfo Player::CheckGround(){
     glm::vec3 origin = transform.GetPosition() + glm::vec3(0.0f, rayOriginOffset-size/2.0f, 0.0f);

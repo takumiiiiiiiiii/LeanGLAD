@@ -14,6 +14,7 @@
 #include "imgui_impl_opengl3.h"
 #include "global.h"
 #include "StageEditor.h"
+#include "Texture.h"
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xpos, double ypos);
 enum class GameState
@@ -39,7 +40,10 @@ class Game{
     //画像のミックス具合
     float mix;
     //テクスチャ
-    unsigned int texture1,texture2;
+    std::unique_ptr<Texture> cubeTexture;
+    std::unique_ptr<Texture> wallTexture;
+    std::unique_ptr<Texture> logoTexture;
+    
 
     //マトリクス
     glm::mat4 projection;
