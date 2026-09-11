@@ -138,7 +138,7 @@ void Game::UpdateTitle(float dt){
     Cube title(1.0,logoTexture->GetID());
     // テクスチャの幅と高さを取得
     float imgWidth  = static_cast<float>(logoTexture->GetWidth());
-    float imgHeight = static_cast<float>(logoTexture->GetHeight())*1.3;
+    float imgHeight = static_cast<float>(logoTexture->GetHeight())*2.0;
 
     // アスペクト比（幅 ÷ 高さ）を計算
     float aspectRatio = imgWidth / imgHeight;

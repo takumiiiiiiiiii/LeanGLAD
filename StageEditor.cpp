@@ -97,7 +97,7 @@ void StageEditor::SelectBlockByMouse(CollisionMesh& collisionmesh, BlockWorld& b
 
 }
 
-//
+//クリックしたいちのオブジェクトの情報を取得
 RayCrossInformation StageEditor::GetClickedWorldPosInformation(CollisionMesh& collisionmesh,const glm::mat4& view, const glm::mat4& projection){
     double mx, my;
     Input::GetMousePosition(mx, my);
