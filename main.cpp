@@ -19,6 +19,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "global.h"
 
 // ウィンドウサイズ変更時に呼ばれるコールバック関数（ウィンドウサイズが変わっても描画範囲を追従させる）
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -46,6 +47,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    //ウィンドウサイズの変更を防ぐ
 
     // macOS向けの互換性設定（Mac環境の場合のみ実行される）
 #ifdef __APPLE__
@@ -60,6 +62,9 @@ int main()
         nullptr,
         nullptr
     );
+
+    // アスペクト比を16:9に固定する場合
+    glfwSetWindowAspectRatio(window, 16, 9);
 
     // ウィンドウの生成に失敗した場合のエラー処理
     if (window == nullptr)
@@ -112,7 +117,6 @@ int main()
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-
         Input::Update();
         // エスケープキーなどの入力入力を監視・処理
         processInput(window);
@@ -127,8 +131,9 @@ int main()
         // ImGUIのレンダリング
         ImGui::Render();
         int display_w, display_h;
-        glfwGetFramebufferSize(window, &display_w, &display_h);
-        glViewport(0, 0, display_w, display_h);
+        glfwGetFramebufferSize(window,&framebufferWidth,&framebufferHeight);
+        framebuffer_size_callback(window, framebufferWidth,framebufferHeight);
+        glViewport(0, 0, framebufferWidth, framebufferHeight);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         // カラーバッファを入れ替えて、描画した内容を実際に画面に表示（ダブルバッファリング）

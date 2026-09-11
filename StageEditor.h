@@ -13,6 +13,14 @@
 
 static const char* objectTypes[] = { "Cube", "Plane", "Wall" }; // 実際の種類名に置き換え
 static const char* editorStates[] = { "Place", "Remove", "Select" };
+
+struct RayCrossInformation{
+    bool ishit;
+    glm::vec3 hitPos;
+    glm::vec3 normal;
+    float dist;
+};
+
 // エディター側の状態(グローバル or Editorクラスのメンバ)
 class StageEditor {
     public:
@@ -21,6 +29,7 @@ class StageEditor {
     void PlaceBlockByMouse(CollisionMesh& collisionmesh, BlockWorld& blockWorld, const glm::mat4& view, const glm::mat4& projection);
     void RemoveBlockByMouse(CollisionMesh& collisionmesh, BlockWorld& blockWorld, const glm::mat4& view, const glm::mat4& projection);
     void SelectBlockByMouse(CollisionMesh& collisionmesh, BlockWorld& blockWorld, const glm::mat4& view, const glm::mat4& projection);
+    RayCrossInformation GetClickedWorldPosInformation(CollisionMesh& collisionmesh,const glm::mat4& view, const glm::mat4& projection);
     PlacedBlock* selectBlock;
     private:
     int currentTypeIndex = 0;

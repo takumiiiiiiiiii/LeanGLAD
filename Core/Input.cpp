@@ -167,9 +167,27 @@ bool Input::IsMouseButtonJustPressed(int button)
     if (button < 0 || button > GLFW_MOUSE_BUTTON_LAST) return false;
     return currentMouseButtons[button] && !previousMouseButtons[button];
 }
+
 void Input::GetMousePosition(double& x, double& y){
-    if(window){
-        glfwGetCursorPos(window,&x,&y);
+    if (!window)
+    {
+        x = 0.0;
+        y = 0.0;
+        return;
+    }
+    
+    glfwGetCursorPos(window, &x, &y);
+
+    int windowWidth, windowHeight;
+    int framebufferWidth, framebufferHeight;
+
+    glfwGetWindowSize(window, &windowWidth, &windowHeight);
+    glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
+
+    if (windowWidth > 0 && windowHeight > 0)
+    {
+        x *= static_cast<double>(framebufferWidth) / windowWidth;
+        y *= static_cast<double>(framebufferHeight) / windowHeight;
     }
 }
 //ゲームパッド
