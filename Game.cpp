@@ -100,7 +100,7 @@ void Game::Update(float dt){
             collisionmesh.removeTrianglesEverything(); // コリジョンメッシュもクリア
             blockWorld.SetCubeTextures(cubeTexture->GetID(),wallTexture->GetID());
             blockWorld.LoadCubeStateFromFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates_new.txt");
-            player.SetPosition(glm::vec3{0.0,2.0,0.0});
+            player.SetPosition(playerStartPos);
             isGoal = false;
         }
         // 他の状態への遷移時処理もここに書ける
@@ -259,6 +259,11 @@ void Game::UpdatePlaying(float dt){
     view = camera.GetViewMatrix();
     shader.setMat4("projection", projection);
     shader.setMat4("view",view);
+
+    if(player.GetPosition().y<-10.0f){
+        
+        player.SetPosition(playerStartPos);
+    }
     
     if(isGoal){
         state = GameState::Title;

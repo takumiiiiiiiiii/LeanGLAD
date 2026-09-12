@@ -36,7 +36,7 @@ class Game{
     GameState state;
     GameState previousState = GameState::Title; // 前フレームの状態を保持
     Player player;
-
+    glm::vec3 playerStartPos = glm::vec3{0.0,2.0,0.0};
     Camera camera;
     Shader shader;
     BlockWorld blockWorld;
