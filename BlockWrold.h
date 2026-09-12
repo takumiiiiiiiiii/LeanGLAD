@@ -54,6 +54,8 @@ public:
     bool GetBlockPosition(const glm::vec3& pos,glm::vec3& blockPosition)const;
     //座標のブロックを削除
     bool DeleteBlockSelected(const glm::vec3& Pos,const std::string& objectName);
+    //全てのブロックを削除
+    bool DeleteAllBlocks();
     //座標のブロックを取得
     PlacedBlock* GetBlockSelected(const glm::vec3& Pos);
     //ファイルにブロックを収納

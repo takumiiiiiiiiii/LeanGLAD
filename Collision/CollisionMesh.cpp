@@ -16,6 +16,10 @@
     void CollisionMesh::addTriangleForObject(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& n, const void* object) {
         triangles.push_back({Triangle{v0, v1, v2, n}, 0, object});
     }
+    bool CollisionMesh::removeTrianglesEverything() {
+        triangles.clear();
+        return true;
+    }
     bool CollisionMesh::removeCubeById(uint32_t cubeId) {
         if (cubeId == 0) return false;  // ID 0は無効
 

@@ -25,10 +25,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     lastX = xpos;
     lastY = ypos;
 
-    // game->camera.ProcessMouseMovement(
-    //         xoffset * game->camera.MouseSensitivity,
-    //         yoffset * game->camera.MouseSensitivity
-    //     );
     if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT)){
         game->camera.ProcessMouseMovement(
             xoffset * game->camera.MouseSensitivity,
@@ -90,9 +86,6 @@ void Game::Initialize()
     shader.setInt("texture1",0);
     shader.setInt("texture2",1);
     player.SetTexture(cubeTexture->GetID());
-    //床初期化
-    // plane.GetTransform().SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-    //床のコリジョンを設定
 
     blockWorld.LoadCubeStateFromFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates_new.txt");
 }
@@ -100,6 +93,21 @@ void Game::Initialize()
 
 
 void Game::Update(float dt){
+    // 状態が変更されたかを検知
+    if (state != previousState) {
+        if (state == GameState::Playing) {
+            blockWorld.DeleteAllBlocks(); // すべてのブロックを削除
+            collisionmesh.removeTrianglesEverything(); // コリジョンメッシュもクリア
+            blockWorld.SetCubeTextures(cubeTexture->GetID(),wallTexture->GetID());
+            blockWorld.LoadCubeStateFromFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates_new.txt");
+            player.SetPosition(glm::vec3{0.0,2.0,0.0});
+            isGoal = false;
+        }
+        // 他の状態への遷移時処理もここに書ける
+        // if (state == GameState::Title) OnEnterTitle();
+
+        previousState = state; // 現在の状態を保存
+    }
     switch (state)
     {
     case GameState::Title:
@@ -174,7 +182,7 @@ void Game::UpdatePlaying(float dt){
     //テクスチャをミックスする度合いを変更
     // trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
     // 画面をクリアするときの背景色を設定（暗い青緑色）
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(101.0f/255.0f, 187.0f/255.0, 233.0f/255.0, 1.0f);
     // 設定した色でカラーバッファ（画面）を実際に塗りつぶしてクリア
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     //色を変更

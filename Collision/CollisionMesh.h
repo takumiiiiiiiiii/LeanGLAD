@@ -15,6 +15,7 @@ public:
     // Cube IDで三角形を削除(最も確実な方法)
     bool removeCubeById(uint32_t cubeId);
     bool removeTrianglesForObject(const void* object);
+    bool removeTrianglesEverything();
     //地面と交差しているかを判定
     bool raycast(const glm::vec3& origin, const glm::vec3& dir, float& outDist, glm::vec3& outNormal) const;
     //保持している三角形一覧を取得(参照なのでコピーは発生しない)

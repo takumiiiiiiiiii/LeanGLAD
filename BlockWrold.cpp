@@ -111,6 +111,12 @@ bool BlockWorld::DeleteBlockSelected(
     return nullptr;
  }
 
+ bool BlockWorld::DeleteAllBlocks(){
+    blocks.clear();
+    collisionMesh.removeTrianglesEverything();
+    return true;
+ }
+
 bool BlockWorld::IsOccupied(const glm::vec3& worldPos) const
 {
     // キューブサイズの1割程度を許容誤差として、同じセルへの重複配置を防ぐ

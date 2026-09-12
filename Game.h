@@ -34,6 +34,7 @@ class Game{
     bool isBlocksSlectPrev = false;
     glm::vec3 selectCube;
     GameState state;
+    GameState previousState = GameState::Title; // 前フレームの状態を保持
     Player player;
 
     Camera camera;
