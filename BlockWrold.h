@@ -4,7 +4,9 @@
 #include <glm/glm.hpp>
 #include "Shapes/Cube.h"
 #include "Shapes/Plane.h"
+#include "Entity/Goal.h"
 #include "Collision/CollisionMesh.h"
+#include "Entity/Object.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -41,7 +43,8 @@ public:
     );
 
 
-    void DrawAll(Shader& shader);
+    void DrawAll(Shader& shader,float deltaTime);
+    ObjectEvent CheckPlayerEnter(const AABB& playerAABB);
 
     //ワールド座標をセル座標に
     glm::vec3 SnapToGrid(const glm::vec3& worldPos)const;
@@ -75,7 +78,7 @@ public:
 
     bool LoadCubeStateFromFile(const std::string& filepath);
 private:
-    void SetObj();
+    void SetObj(const glm::vec3& worldPos,const std::string& objectType,const glm::vec3& objectSize,bool isShown);
     bool IsOccupied(const glm::vec3& worldPos) const;
     //ファイルの処理
     CollisionMesh& collisionMesh;

@@ -9,13 +9,12 @@
 #include "../Core/Input.h"
 #include "../Camera.h"
 #include "../Phythiks/Kinematics.h"
-#include "../BlockWrold.h"
 #include "../Collision/AABB.h"
 
 //Shaderクラスの前方宣言
-#define G = 9.81;
+constexpr float G = 9.81;
 class Shader;
-
+class BlockWorld;
 struct GroundHitInfo
 {
     bool grounded = false;
@@ -44,10 +43,8 @@ public:
     void SetPosition(const glm::vec3& pos);
     void SetMoveSpeed(float speed);
     void SetTexture(GLuint id);
-
-
-
     int getId() const { return id_; }
+    AABB getAABB() const { return aabb; } // AABBを返す
 private:
     //固有ID
     static inline int next_id_ = 1; // C++17以降はinline初期化が可能

@@ -1,8 +1,8 @@
 #include "Goal.h"
-
-Goal::Goal(CollisionMesh& groundCollision, GLuint textureID, float size = 1.0f)
-:cube(size),
-goalSize(size)
+#include "../Shader.h"
+Goal::Goal(float input_size, GLuint textureID)
+:cube(input_size),
+goalSize(input_size)
 
 {
 }
@@ -12,7 +12,19 @@ void Goal::Update(float deltaTime){
     aabb.Set(centerPos,transform.GetScale());
     
 }
-bool Goal::GoalPlayer(AABB player_aabb){
-    return aabb.Intersects(player_aabb);
- }
+bool Goal::CheckPlayerEnter(const AABB& playerAABB){
+    return aabb.Intersects(playerAABB);
+};
+
+
+
+void Goal::Draw(Shader& shader)
+{
+    cube.SetTranformPosition(transform.GetPosition());
+    cube.Draw(shader);
+}
+
+ObjectEvent  Goal::OnPlayerEnter(){
+    return ObjectEvent::GoalReached;
+}
 

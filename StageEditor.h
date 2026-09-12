@@ -10,9 +10,11 @@
 #include "imgui_impl_opengl3.h"
 #include "BlockWrold.h"
 #include "global.h"
+#include "Collision/AABB.h"
 
-static const char* objectTypes[] = { "Cube", "Plane", "Wall" }; // 実際の種類名に置き換え
+static const char* objectTypes[] = { "Cube", "Plane", "Wall","Goal" }; // 実際の種類名に置き換え
 static const char* editorStates[] = { "Place", "Remove", "Select" };
+
 
 struct RayCrossInformation{
     bool ishit;

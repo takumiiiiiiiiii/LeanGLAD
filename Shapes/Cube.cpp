@@ -21,6 +21,7 @@ Cube::~Cube()
 
 void Cube::Draw(Shader& shader)
 {
+    
     shader.setMat4("model", transform.GetModelMatrix());
     if (textureID != 0) {
         glActiveTexture(GL_TEXTURE0);

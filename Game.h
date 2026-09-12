@@ -15,6 +15,7 @@
 #include "global.h"
 #include "StageEditor.h"
 #include "Texture.h"
+#include "Entity/Object.h"
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xpos, double ypos);
 enum class GameState
@@ -25,6 +26,7 @@ enum class GameState
     Result,
     Editor
 };
+
 // 画面の初期サイズ（幅と高さ）
 class Game{
     public:

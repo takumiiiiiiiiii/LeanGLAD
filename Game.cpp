@@ -240,8 +240,11 @@ void Game::UpdatePlaying(float dt){
     //地形の描画
     shader.setInt("texture1",0);
     
-
-    blockWorld.DrawAll(shader);
+    blockWorld.DrawAll(shader,dt);
+    ObjectEvent event = blockWorld.CheckPlayerEnter(player.getAABB());
+    if(event == ObjectEvent::GoalReached){
+        isGoal = true;
+    }
 
     //カメラ反映
     projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -252,8 +255,9 @@ void Game::UpdatePlaying(float dt){
     if(isGoal){
         state = GameState::Title;
     }
-    
 }
+
+
 
 void Game::UpdateEditor(float dt){
     stageEditor.UpdateEditor(dt);
@@ -279,14 +283,12 @@ void Game::UpdateEditor(float dt){
 
     //地形の描画
     shader.setInt("texture1",0);
-
-    blockWorld.DrawAll(shader);
+    blockWorld.DrawAll(shader,dt);
 
     //カメラ反映
     projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     view = camera.GetViewMatrix();
     shader.setMat4("projection", projection);
     shader.setMat4("view",view);
-
 }
 

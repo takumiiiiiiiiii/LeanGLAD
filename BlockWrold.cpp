@@ -1,7 +1,7 @@
 #include "BlockWrold.h"
 #include "Shapes/Cube.h"
 #include "Shapes/Plane.h"
-#include "Entity/Object.h"
+
 
 BlockWorld::BlockWorld(CollisionMesh& collisionMesh, float cubeSize)
     : collisionMesh(collisionMesh), cubeSize(cubeSize)
@@ -136,43 +136,8 @@ void BlockWorld::PlaceBlock(
     if (IsOccupied(snapped))
         return;
 
-    std::unique_ptr<Object> newObject;
+    SetObj(snapped,objectType,objectSize,isShown);
 
-    if (objectType == "Cube") {
-        auto cube = std::make_unique<Cube>(1.0, cubeTexture);
-        cube->SetTranformPosition(snapped);
-        cube->GetTransform().SetScale(objectSize);
-        cube->RegisterCollisionAndStoreIndices(collisionMesh);
-        newObject = std::move(cube);
-    }
-    else if (objectType == "Wall" || objectType == "wall") {
-        auto cube = std::make_unique<Cube>(1.0, wallTexture);
-        cube->SetTranformPosition(snapped);
-        cube->GetTransform().SetScale(objectSize);
-        cube->RegisterCollisionAndStoreIndices(collisionMesh);
-        newObject = std::move(cube);
-    }
-    else if (objectType == "Plane") {
-        auto plane = std::make_unique<Plane>(1.0);
-        snapped.y -= 0.5f * objectSize.y;
-        plane->GetTransform().SetPosition(snapped);
-        plane->GetTransform().SetScale(objectSize);
-        plane->RegisterCollision(collisionMesh);
-        newObject = std::move(plane);
-    }
-    else {
-        std::cerr << "警告: 未対応のオブジェクト種類です: "
-                  << objectType << "\n";
-        return;
-    }
-
-    blocks.push_back(PlacedBlock{
-        snapped,
-        objectType,
-        objectSize,
-        std::move(newObject),
-        isShown
-    });
 }
 
 
@@ -412,64 +377,8 @@ bool BlockWorld::LoadCubeStateFromFile(const std::string& filepath)
                   << " 個のオブジェクト\n";
 
         for (const auto& blockData : blockDataList) {
-            std::unique_ptr<Object> newObject;
-
-            if (blockData.objectType == "Cube") {
-                auto cube = std::make_unique<Cube>(
-                    1.0, cubeTexture);
-
-                cube->SetTranformPosition(blockData.position);
-                cube->GetTransform().SetScale(blockData.objectSize);
-                cube->RegisterCollisionAndStoreIndices(collisionMesh);
-                
-                newObject = std::move(cube);
-            }
-            else if (blockData.objectType == "Wall" ||
-                     blockData.objectType == "wall") {
-                auto wall = std::make_unique<Cube>(
-                    1.0, wallTexture);
-
-                wall->SetTranformPosition(blockData.position);
-                wall->GetTransform().SetScale(blockData.objectSize);
-                wall->RegisterCollisionAndStoreIndices(collisionMesh);
-
-                newObject = std::move(wall);
-            }
-            else if (blockData.objectType == "Plane") {
-                auto plane = std::make_unique<Plane>(
-                    1.0);
-
-                plane->GetTransform().SetPosition(blockData.position);
-                plane->GetTransform().SetScale(blockData.objectSize);
-                plane->RegisterCollision(collisionMesh);
-                newObject = std::move(plane);
-            }
-            else {
-                std::cerr << "警告: 未対応のオブジェクト種類です: "
-                          << blockData.objectType << "\n";
-                continue;
-            }
-
-            blocks.push_back(PlacedBlock{
-                blockData.position,
-                blockData.objectType,
-                blockData.objectSize,
-                std::move(newObject),
-                blockData.isShown
-            });
-
-            std::cout << "  " << blockData.objectType
-                      << "配置: (" << blockData.position.x << ", "
-                      << blockData.position.y << ", "
-                      << blockData.position.z << ")"
-                      << " サイズ: (" << blockData.objectSize.x << ", "
-                      << blockData.objectSize.y << ", "
-                      << blockData.objectSize.z << ")"
-                      << " 表示: "
-                      << (blockData.isShown ? "true" : "false")
-                      << "\n";
+            SetObj(blockData.position,blockData.objectType,blockData.objectSize,blockData.isShown);
         }
-
         return true;
     }
     catch (const std::exception& e) {
@@ -480,15 +389,83 @@ bool BlockWorld::LoadCubeStateFromFile(const std::string& filepath)
 }
 
 
-void BlockWorld::SetObj(){
-    
+void BlockWorld::SetObj(
+    const glm::vec3& worldPos,
+    const std::string& objectType,
+    const glm::vec3& objectSize,
+    bool isShown){
+    std::unique_ptr<Object> newObject;
+    if (objectType == "Cube") {
+        auto cube = std::make_unique<Cube>(
+            1.0, cubeTexture);
+
+        cube->SetTranformPosition(worldPos);
+        cube->GetTransform().SetScale(objectSize);
+        cube->RegisterCollisionAndStoreIndices(collisionMesh);
+        
+        newObject = std::move(cube);
+    }
+    else if (objectType == "Wall" ||
+                objectType == "wall") {
+        auto wall = std::make_unique<Cube>(
+            1.0, wallTexture);
+
+        wall->SetTranformPosition(worldPos);
+        wall->GetTransform().SetScale(objectSize);
+        wall->RegisterCollisionAndStoreIndices(collisionMesh);
+
+        newObject = std::move(wall);
+    }
+    else if (objectType == "Plane") {
+        auto plane = std::make_unique<Plane>(
+            1.0);
+        plane->GetTransform().SetPosition(worldPos);
+        plane->GetTransform().SetScale(objectSize);
+        plane->RegisterCollision(collisionMesh);
+        newObject = std::move(plane);
+    }
+    else if(objectType == "Goal"){
+        auto GoalObj = std::make_unique<Goal>(1.0, cubeTexture); 
+        GoalObj->GetTransform().SetPosition(worldPos);
+        GoalObj->GetTransform().SetScale(objectSize);
+        newObject = std::move(GoalObj);
+    }
+    else {
+        std::cerr << "警告: 未対応のオブジェクト種類です: "
+                    << objectType << "\n";
+    }
+
+    blocks.push_back(PlacedBlock{
+        worldPos,
+        objectType,
+        objectSize,
+        std::move(newObject),
+        isShown
+    });
 }
-void BlockWorld::DrawAll(Shader& shader)
+void BlockWorld:: DrawAll(Shader& shader,float deltaTime)
 {
     for (auto& block : blocks)
     {
         if (!block.isShown) continue; // 描画フラグがfalseの場合はスキップ
         if (!block.object) continue; // objectがnullptrの場合はスキップ
         block.object->Draw(shader);
+        block.object->Update(deltaTime);
     }
+}
+
+ObjectEvent BlockWorld::CheckPlayerEnter(const AABB& playerAABB){
+    for (auto& block : blocks)
+    {
+        if (!block.isShown) continue; // 描画フラグがfalseの場合はスキップ
+        if (!block.object) continue; // objectがnullptrの場合はスキップ
+        if(block.object->CheckPlayerEnter(playerAABB)){
+            ObjectEvent event = block.object->OnPlayerEnter();
+            if(event == ObjectEvent::GoalReached){
+                std::cout << "ゴールに到達しました！" << std::endl;
+            }
+            return event;
+        }
+    }
+    return ObjectEvent::None;
 }

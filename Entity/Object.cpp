@@ -21,6 +21,7 @@ void Object::SetActive(bool isActive)
     active = isActive;
 }
 
+
 bool Object::IsActive() const
 {
     return active;
