@@ -138,6 +138,9 @@ void Cube::SetTranformPosition(glm::vec3 position){
 void Cube::SetScale(glm::vec3 scale) {
     this->transform.SetScale(scale);
 }
+glm::vec3 Cube::GetScale(){
+    return transform.GetScale();
+}
 
 void Cube::RegisterCollision(CollisionMesh& collision) const
 {

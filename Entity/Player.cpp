@@ -15,6 +15,7 @@ Player::Player(CollisionMesh& groundCollision,const Transform& initialTransform,
 
 void Player::Update(float deltaTime)
 {
+    
     GroundHitInfo ground = CheckGroundCube();
     glm::vec3 curPos = transform.GetPosition();
 
@@ -37,6 +38,10 @@ void Player::Update(float deltaTime)
     curPos.y += kinematics.velocity.y;
 
     transform.SetPosition(curPos);
+    //AABB用の判定をアップデート
+    glm::vec3 centerpos = transform.GetPosition()+glm::vec3(0.0f,size/2.0f,0.0f);
+    aabb.Set(centerpos,cube.GetScale());
+    //移動差分をリセット
     pendingMove = glm::vec3(0.0f); // 次フレーム用にリセット
 }
 

@@ -10,6 +10,7 @@
 #include "../Camera.h"
 #include "../Phythiks/Kinematics.h"
 #include "../BlockWrold.h"
+#include "../Collision/AABB.h"
 
 //Shaderクラスの前方宣言
 #define G = 9.81;
@@ -53,11 +54,10 @@ private:
     const int id_;                  // オブジェクト固有のID（変更不可にするためconst）
     //ボックス化
     bool isBlock = false;
-
     //地面関連
-    glm::vec3 pendingMove{0.0f};
-    const float wallSkin = 0.005f;
-    const float edgeCheckThreshold = 0.2f;
+
+
+    //
 
     bool AreAllCornersGrounded(const glm::vec3& pos) const;
     glm::vec3 ResolveWallCollision(const glm::vec3& currentPos,const glm::vec3& desiredDelta) const;
@@ -67,21 +67,28 @@ private:
     GroundHitInfo CheckGroundCube();
     CollisionMesh& groundCollision; // 地面のCollisionMeshへの参照
     glm::vec3 velocity{0.0f};
-    bool isGrounded = false;
-    bool isJumpimg = false;
+
+
+    //Ray関連
     const float rayOriginOffset   = 0.1f;  // 足元より少し上からRayを飛ばす
     const float groundedThreshold = 0.15f; // この距離以内なら接地とみなす
-    //物理
+
+    //ジャンプ
     const float gravity   = -0.28f;
     const float jumpForce =  0.08f;
+    bool isJumpimg = false;
+    bool isGrounded = false;
+    glm::vec3 pendingMove{0.0f};
+    const float wallSkin = 0.005f;
+    const float edgeCheckThreshold = 0.2f;
     //サイズ
-
     float size = 0;
-    
-
+    //AABB
+    AABB aabb;
     //加速度と速度
     Kinematics kinematics;
     //描画に使用するオブジェクト
     Cube cube;
+
     float moveSpeed;
 };

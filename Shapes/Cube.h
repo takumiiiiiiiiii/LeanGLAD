@@ -23,6 +23,7 @@ public:
     void RegisterCollisionAndStoreIndices(CollisionMesh& collision);
     void SetScale(glm::vec3 scale);
     void SetTranformPosition(glm::vec3 transformPosition);
+    glm::vec3 GetScale();
 private:
     GLuint VAO;
     GLuint VBO;

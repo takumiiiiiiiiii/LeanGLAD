@@ -479,6 +479,10 @@ bool BlockWorld::LoadCubeStateFromFile(const std::string& filepath)
     }
 }
 
+
+void BlockWorld::SetObj(){
+    
+}
 void BlockWorld::DrawAll(Shader& shader)
 {
     for (auto& block : blocks)

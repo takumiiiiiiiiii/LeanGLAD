@@ -70,6 +70,7 @@ Game::Game()
 
 void Game::Initialize()
 {
+    isGoal = false;
     // ★ アルファブレンディングを有効化
     glEnable(GL_BLEND);
     // 重なり合った際の色の計算方法を指定 (前景色のAlpha値で合成)
@@ -247,6 +248,11 @@ void Game::UpdatePlaying(float dt){
     view = camera.GetViewMatrix();
     shader.setMat4("projection", projection);
     shader.setMat4("view",view);
+    
+    if(isGoal){
+        state = GameState::Title;
+    }
+    
 }
 
 void Game::UpdateEditor(float dt){

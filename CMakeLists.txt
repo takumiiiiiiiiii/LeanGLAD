@@ -48,6 +48,8 @@ add_executable(OpenGLTest
     ${IMGUI_DIR}/imgui_demo.cpp
     ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
     ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+    Entity/Goal.cpp
+    Collision/AABB.cpp
 )
 target_include_directories(OpenGLTest PRIVATE
     external/glfw/glfw-3.4/include

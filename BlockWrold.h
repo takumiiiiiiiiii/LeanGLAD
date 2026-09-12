@@ -40,6 +40,7 @@ public:
         bool isShown = true
     );
 
+
     void DrawAll(Shader& shader);
 
     //ワールド座標をセル座標に
@@ -56,6 +57,8 @@ public:
     bool SaveToFile(const std::string& filepath,const std::string& filename) const;
     //キューブのサイズを取得
     float Getcubesize() {return cubeSize;};
+    //オブジェクトをセットする
+
 
     glm::vec3 parseLine (const std::string& line, std::size_t lineNumber) const;
     std::vector<glm::vec3> readCoordinatesFromFile(const std::string& filepath) const;
@@ -69,9 +72,10 @@ public:
     };
     ParsedBlockData parseBlockLine(const std::string& line, std::size_t lineNumber) const;
     std::vector<ParsedBlockData> readBlockDataFromFile(const std::string& filepath) const;
-    
+
     bool LoadCubeStateFromFile(const std::string& filepath);
 private:
+    void SetObj();
     bool IsOccupied(const glm::vec3& worldPos) const;
     //ファイルの処理
     CollisionMesh& collisionMesh;

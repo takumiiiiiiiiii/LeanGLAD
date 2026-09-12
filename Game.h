@@ -60,4 +60,5 @@ class Game{
     void UpdateEditor(float dt);
 
     private:
+    bool isGoal;
 };
