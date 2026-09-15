@@ -16,11 +16,13 @@
 #include "StageEditor.h"
 #include "Texture.h"
 #include "Entity/Object.h"
+#include "StageSelecter.h"
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xpos, double ypos);
 enum class GameState
 {
     Title,
+    StageSelect,
     Playing,
     Goal,
     Result,
@@ -53,12 +55,15 @@ class Game{
     glm::mat4 view;
     //エディター
     StageEditor stageEditor;
+    //ステージセレクター
+    StageSelecter stageSelector;
     //コリジョン
     CollisionMesh collisionmesh;
     Game();
     void Initialize();
     void Update(float dt);
     void UpdateTitle(float dt);
+    void UpdateStageSelect(float dt);
     void UpdatePlaying(float dt);
     void UpdateEditor(float dt);
 

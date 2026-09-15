@@ -113,7 +113,9 @@ void Game::Update(float dt){
     case GameState::Title:
         UpdateTitle(dt);
         break;
-
+    case GameState::StageSelect:
+        UpdateStageSelect(dt);
+        break;
     case GameState::Playing:
         UpdatePlaying(dt);
         break;
@@ -133,7 +135,8 @@ void Game::Update(float dt){
 
 void Game::UpdateTitle(float dt){
     if(Input::IsJumpJustPressed()){
-        state = GameState::Playing;
+        state = GameState::StageSelect;
+        
     }
     if(Input::IsKeyJustPressed(GLFW_KEY_E)){
         state = GameState::Editor;
@@ -160,8 +163,31 @@ void Game::UpdateTitle(float dt){
     title.SetScale({ targetWidth, targetHeight, 1.0f });
     title.SetTranformPosition({0.0,0.5,0.0});
     title.Draw(shader);
+    
     shader.setMat4("projection", 1);
     shader.setMat4("view",1);
+}
+
+void Game::UpdateStageSelect(float dt){
+    shader.use();
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    // 設定した色でカラーバッファ（画面）を実際に塗りつぶしてクリア
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    stageSelector.detectStages("/Users/x23029xx/Documents/GitHub/LeanGLAD/Stages");
+    stageSelector.handleInput();
+    stageSelector.Draw(shader);
+    camera.Follow(stageSelector.GetStageCubePosition(),dt);
+    std::cout << stageSelector.GetSelectedStageIndex() << std::endl;
+
+    if(Input::IsJumpJustPressed()){
+        state = GameState::Playing;
+    }
+    // shader.setMat4("projection", 1);
+    // shader.setMat4("view",1);
+    projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    view = camera.GetViewMatrix();
+    shader.setMat4("projection", projection);
+    shader.setMat4("view",view);
 }
 
 void Game::UpdatePlaying(float dt){
@@ -191,6 +217,7 @@ void Game::UpdatePlaying(float dt){
         if(!isBlocksSlectPrev){
             blockWorld.PlaceBlock(blockWorld.SnapToGrid(selectCube), "Cube", {1.0,1.0,1.0}, false);
         }
+        //カメラの前方向ベクトルを取得し、y成分を0にして水平移動のみを考慮
         glm::vec3 front = camera.Front;
         front.y = 0;
         glm::vec3 right = camera.Right;
