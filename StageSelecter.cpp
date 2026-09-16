@@ -12,12 +12,12 @@ void StageSelecter::detectStages(const std::string& folderPath) {
     maxStageIndex = -1;
     for (int i = 0; ; ++i) {
         std::string filePath = folderPath + "/" + std::to_string(i) + ".txt";
+        currentFolderPath = folderPath;
         if (fs::exists(filePath)) {
             maxStageIndex = i;
             stageCubes.push_back(std::make_unique<Cube>());
             stageCubes.back()->SetTranformPosition(
-            {static_cast<float>(i) * -2.0f, 0.0f, 0.0f}
-);
+            {static_cast<float>(i) * -2.0f, 0.0f, 0.0f});
         } else {
             break; // 番号が連続しなくなったら終了
         }
@@ -60,7 +60,27 @@ int StageSelecter::GetSelectedStageIndex(){
     return selectedStageIndex;
 }
 
+bool StageSelecter::SetSelectedStageIndex(int stage_index){
+    if (stage_index <= maxStageIndex ||stage_index >= 0) {
+            selectedStageIndex = stage_index;
+            return true;
+    }
+    return false;
+}
+
 glm::vec3 StageSelecter::GetStageCubePosition() {
     return stageCubePosition;
+}
+
+std::string StageSelecter::GetSelectedStageNameAndPath(){
+    return GetSelectedStagePath()+GetSelectedFileName();
+}
+
+std::string StageSelecter::GetSelectedStagePath(){
+    return currentFolderPath + "/";
+}
+
+std::string StageSelecter::GetSelectedFileName(){
+    return std::to_string(GetSelectedStageIndex()) + ".txt";
 }
 

@@ -87,7 +87,7 @@ void Game::Initialize()
     shader.setInt("texture2",1);
     player.SetTexture(cubeTexture->GetID());
 
-    blockWorld.LoadCubeStateFromFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates_new.txt");
+    // blockWorld.LoadCubeStateFromFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates_new.txt");
 }
 
 
@@ -99,7 +99,7 @@ void Game::Update(float dt){
             blockWorld.DeleteAllBlocks(); // すべてのブロックを削除
             collisionmesh.removeTrianglesEverything(); // コリジョンメッシュもクリア
             blockWorld.SetCubeTextures(cubeTexture->GetID(),wallTexture->GetID());
-            blockWorld.LoadCubeStateFromFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates_new.txt");
+            blockWorld.LoadCubeStateFromFile(currentStageName);
             player.SetPosition(playerStartPos);
             isGoal = false;
         }
@@ -177,8 +177,10 @@ void Game::UpdateStageSelect(float dt){
     stageSelector.handleInput();
     stageSelector.Draw(shader);
     camera.Follow(stageSelector.GetStageCubePosition(),dt);
-    std::cout << stageSelector.GetSelectedStageIndex() << std::endl;
 
+
+    currentStageName = stageSelector.GetSelectedStageNameAndPath();
+        std::cout << stageSelector.GetSelectedStagePath() << std::endl;
     if(Input::IsJumpJustPressed()){
         state = GameState::Playing;
     }
@@ -293,7 +295,11 @@ void Game::UpdatePlaying(float dt){
     }
     
     if(isGoal){
-        state = GameState::Title;
+        if(stageSelector.SetSelectedStageIndex(stageSelector.GetSelectedStageIndex()+1)){
+            ReroadStage();
+        }else{
+            state = GameState::Title;
+        }
     }
 }
 
@@ -315,10 +321,10 @@ void Game::UpdateEditor(float dt){
     
     //マウス入力
      if(Input::IsKeyPressed(GLFW_KEY_Z)){
-        blockWorld.SaveToFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates_new.txt","blocks");
+        blockWorld.SaveToFile(stageSelector.GetSelectedStageNameAndPath(),stageSelector.GetSelectedFileName());
     }
     if(Input::IsKeyPressed(GLFW_KEY_X)){
-        blockWorld.LoadCubeStateFromFile("/Users/x23029xx/Documents/GitHub/LeanGLAD/coordinates_new.txt");
+        blockWorld.LoadCubeStateFromFile(stageSelector.GetSelectedStageNameAndPath());
     }
 
     //地形の描画
@@ -332,3 +338,13 @@ void Game::UpdateEditor(float dt){
     shader.setMat4("view",view);
 }
 
+
+void Game::ReroadStage(){
+    blockWorld.DeleteAllBlocks(); // すべてのブロックを削除
+    collisionmesh.removeTrianglesEverything(); // コリジョンメッシュもクリア
+    blockWorld.SetCubeTextures(cubeTexture->GetID(),wallTexture->GetID());
+    currentStageName = stageSelector.GetSelectedStageNameAndPath();
+    blockWorld.LoadCubeStateFromFile(currentStageName);
+    player.SetPosition(playerStartPos);
+    isGoal = false;
+}

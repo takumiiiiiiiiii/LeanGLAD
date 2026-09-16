@@ -57,8 +57,11 @@ class Game{
     StageEditor stageEditor;
     //ステージセレクター
     StageSelecter stageSelector;
+    //現在のステージ名
+    std::string currentStageName;
     //コリジョン
     CollisionMesh collisionmesh;
+
     Game();
     void Initialize();
     void Update(float dt);
@@ -66,6 +69,7 @@ class Game{
     void UpdateStageSelect(float dt);
     void UpdatePlaying(float dt);
     void UpdateEditor(float dt);
+    void ReroadStage();
 
     private:
     bool isGoal;
