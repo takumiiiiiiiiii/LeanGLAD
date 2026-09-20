@@ -24,8 +24,11 @@ void StageEditor::UpdateEditor(float dt) {
             glm::vec3 selectObjsize = selectBlock->object->GetTransform().GetScale();
             ImGui::InputFloat3("Position", &selectObjPos.x);
             ImGui::InputFloat3("Scale", &selectObjsize.x);
-            selectBlock->object->GetTransform().SetPosition(selectObjPos);
-            selectBlock->object->GetTransform().SetScale(selectObjsize);
+            if(selectBlock!=nullptr){
+                selectBlock->object->GetTransform().SetPosition(selectObjPos);
+                selectBlock->object->GetTransform().SetScale(selectObjsize);
+            }
+
         } else {
             ImGui::Text("No block selected");
         }
@@ -39,12 +42,17 @@ void StageEditor::UpdateEditor(float dt) {
 
 void StageEditor::RemoveBlockByMouse(CollisionMesh& collisionmesh, BlockWorld& blockWorld, const glm::mat4& view, const glm::mat4& projection){
      if (ImGui::GetIO().WantCaptureMouse ||
-        !Input::IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_RIGHT))
+        !Input::IsMouseButtonJustPressed(GLFW_MOUSE_BUTTON_LEFT))
     {
         return;
     }
-     RayCrossInformation cross;
+    if (editorStates[currentStateIndex] != std::string("Remove"))
+    {
+        return;
+    }
+    RayCrossInformation cross;
     cross = GetClickedWorldPosInformation(collisionmesh,view,projection);
+    
     if(cross.ishit){
         const glm::vec3 deletePos = cross.hitPos - cross.normal * 0.001f;
         std::cout << "delete result="
@@ -59,7 +67,7 @@ void StageEditor::PlaceBlockByMouse(CollisionMesh& collisionmesh, BlockWorld& bl
     {
         return;
     }
-     if (editorStates[currentStateIndex] != std::string("Place"))
+    if (editorStates[currentStateIndex] != std::string("Place"))
     {
         return;
     }
