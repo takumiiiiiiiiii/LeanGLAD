@@ -93,7 +93,6 @@ void Game::Initialize()
 
 
 void Game::Update(float dt){
-    // 状態が変更されたかを検知
     if (state != previousState) {
         if (state == GameState::Playing) {
             blockWorld.DeleteAllBlocks(); // すべてのブロックを削除
@@ -108,6 +107,8 @@ void Game::Update(float dt){
 
         previousState = state; // 現在の状態を保存
     }
+    // 状態が変更されたかを検知
+    FixcedUpdate(dt);
     switch (state)
     {
     case GameState::Title:
@@ -268,7 +269,7 @@ void Game::UpdatePlaying(float dt){
         camera.Follow(player.GetPosition(),dt);
         camera.FollowRotate(player.GetPosition(), 100.0,dt);
         player.MoveWithCameraOrientation(camera,dt);
-        player.Update(dt);
+        player.JumpInput();
     }
 
     player.Draw(shader);
@@ -336,6 +337,19 @@ void Game::UpdateEditor(float dt){
     view = camera.GetViewMatrix();
     shader.setMat4("projection", projection);
     shader.setMat4("view",view);
+}
+
+void Game::FixcedUpdate(float delta_Time){
+    static float accumulator = 0.0f;
+    accumulator += delta_Time;
+    const float fixedDeltaTime = 1.0f / 60.0f;
+    while(accumulator >= fixedDeltaTime){
+        // ここで状態の更新やプレイヤのUpdateを固定時間で行う
+        if(state == GameState::Playing){
+            player.UpdatePhysics(fixedDeltaTime);
+        }
+        accumulator -= fixedDeltaTime;
+    }
 }
 
 

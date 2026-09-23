@@ -32,11 +32,13 @@ public:
 
     //操作
     void MoveWithCameraOrientation(Camera& camera, float deltaTime);
+    void JumpInput();
     void Jump();
     void TrunBlock(bool isBlock,BlockWorld& blockWorld,float deltaTime);
 
     //物理
     void UpdateGravity(float deltaTime);
+    void UpdatePhysics(float fixcedDeltaTime);
 
     //ゲッター・セッター
     glm::vec3 GetPosition() const;
@@ -71,8 +73,9 @@ private:
     const float groundedThreshold = 0.15f; // この距離以内なら接地とみなす
 
     //ジャンプ
-    const float gravity   = -0.28f;
-    const float jumpForce =  0.08f;
+    const float gravity   = -0.48f;
+    const float jumpForce =  0.15f;
+    bool isCanJump = false;
     bool isJumpimg = false;
     bool isGrounded = false;
     glm::vec3 pendingMove{0.0f};

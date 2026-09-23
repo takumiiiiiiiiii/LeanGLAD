@@ -16,34 +16,8 @@ Player::Player(CollisionMesh& groundCollision,const Transform& initialTransform,
 
 void Player::Update(float deltaTime)
 {
-    
-    GroundHitInfo ground = CheckGroundCube();
-    glm::vec3 curPos = transform.GetPosition();
-
-    //地面に接地しているかどうか
-    if (ground.grounded && kinematics.velocity.y<0) {
-        isJumpimg = false;
-        kinematics.velocity.y = 0.0f;
-        kinematics.acceleration.y = 0.0f;
-        curPos.y = ground.point.y + size / 2.0f;
-    } else {
-        kinematics.acceleration.y = gravity;
-    }
-
     Jump();
-    kinematics.Integrate(deltaTime);
-
-    glm::vec3 resolved = ResolveHorizontalMovement(curPos, pendingMove);
-    curPos.x += resolved.x;
-    curPos.z += resolved.z;
-    curPos.y += kinematics.velocity.y;
-
-    transform.SetPosition(curPos);
-    //AABB用の判定をアップデート
-    glm::vec3 centerpos = transform.GetPosition()+glm::vec3(0.0f,size/2.0f,0.0f);
-    aabb.Set(centerpos,cube.GetScale());
-    //移動差分をリセット
-    pendingMove = glm::vec3(0.0f); // 次フレーム用にリセット
+    
 }
 
 void Player::Draw(Shader& shader)
@@ -57,7 +31,6 @@ void Player::Draw(Shader& shader)
 //カメラ向きを基準に移動
 void Player::MoveWithCameraOrientation(Camera& camera, float deltaTime)
 {
-    UpdateGravity(deltaTime);
     glm::vec3 forward = camera.Front;
     forward.y = 0.0f;
     forward = glm::normalize(forward);
@@ -81,22 +54,31 @@ void Player::MoveWithCameraOrientation(Camera& camera, float deltaTime)
     pendingMove += movement * moveSpeed * deltaTime; 
 }
 
+
+void Player::JumpInput(){
+    GroundHitInfo ground = CheckGroundCube();
+    if(Input::IsJumpJustPressed()&& ground.grounded){
+        isCanJump = true;
+    }
+    if (ground.grounded && kinematics.velocity.y <= 0.0f)
+    {
+        isJumpimg = false;
+    }
+}
 //ジャンプ
 void Player::Jump()
 {
     GroundHitInfo ground = CheckGroundCube();
 
-    if (Input::IsJumpJustPressed() && ground.grounded)
+    if (isCanJump)
     {
+        isCanJump = false;
         kinematics.velocity.y = jumpForce;
         isJumpimg = true;
         return;
     }
 
-    if (ground.grounded && kinematics.velocity.y <= 0.0f)
-    {
-        isJumpimg = false;
-    }
+
 }
 void Player::TrunBlock(bool isBlock,BlockWorld& blockWorld,float deltaTime){
 
@@ -138,6 +120,37 @@ void Player::TrunBlock(bool isBlock,BlockWorld& blockWorld,float deltaTime){
 void Player::UpdateGravity(float deltaTime){
     glm::vec3 movement(0.0f);
     transform.Translate(movement*deltaTime);
+}
+
+void Player::UpdatePhysics(float fixcedDeltaTime){
+      GroundHitInfo ground = CheckGroundCube();
+    glm::vec3 curPos = transform.GetPosition();
+
+    //地面に接地しているかどうか
+    if (ground.grounded && kinematics.velocity.y<0) {
+        isJumpimg = false;
+        kinematics.velocity.y = 0.0f;
+        kinematics.acceleration.y = 0.0f;
+        curPos.y = ground.point.y + size / 2.0f;
+    } else {
+        kinematics.acceleration.y = gravity;
+    }
+
+    Jump();
+    kinematics.Integrate(fixcedDeltaTime);
+
+    glm::vec3 resolved = ResolveHorizontalMovement(curPos, pendingMove);
+    curPos.x += resolved.x;
+    curPos.z += resolved.z;
+    curPos.y += kinematics.velocity.y;
+
+    transform.SetPosition(curPos);
+    //AABB用の判定をアップデート
+    glm::vec3 centerpos = transform.GetPosition()+glm::vec3(0.0f,size/2.0f,0.0f);
+    aabb.Set(centerpos,cube.GetScale());
+    //移動差分をリセット
+    pendingMove = glm::vec3(0.0f); // 次フレーム用にリセット
+    UpdateGravity(fixcedDeltaTime);
 }
 
 void Player::SetPosition(const glm::vec3& pos)

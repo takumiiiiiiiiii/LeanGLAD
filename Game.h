@@ -69,6 +69,7 @@ class Game{
     void UpdateStageSelect(float dt);
     void UpdatePlaying(float dt);
     void UpdateEditor(float dt);
+    void FixcedUpdate(float dt);
     void ReroadStage();
 
     private:
